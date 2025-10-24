@@ -1,74 +1,103 @@
 export default function Explore() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 dark:from-gray-900 dark:to-blue-900 pt-20">
-      <div className="container mx-auto px-4 py-16">
-        {/* Header */}
-        <div className="text-center mb-16">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-50 dark:bg-blue-900/50 border border-blue-200 dark:border-blue-700 text-blue-700 dark:text-blue-300 text-sm font-medium mb-6">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-            </svg>
-            Community Profiles
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-blue-900 pt-24">
+      <div className="container mx-auto px-4 py-20">
+        <div className="max-w-6xl mx-auto">
+          {/* Header */}
+          <div className="text-center mb-20">
+            <div className="inline-flex items-center gap-3 px-6 py-3 rounded-full bg-indigo-500/10 border border-indigo-400/20 backdrop-blur-sm text-indigo-300 text-sm font-medium mb-10">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              Profile Discovery
+            </div>
+            <h1 className="text-6xl font-bold mb-8 text-white leading-tight">
+              Explore On-Chain Profiles
+            </h1>
+            <p className="text-xl text-gray-300 max-w-3xl mx-auto leading-relaxed">
+              Discover amazing profiles built on Sui blockchain. Find creators, developers, and innovators in the Web3 space.
+            </p>
           </div>
-          <h1 className="text-5xl font-bold mb-6 text-gray-900 dark:text-white">
-            Explore 
-            <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent"> QEDI Profiles</span>
-          </h1>
-          <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-            Discover amazing profiles created by our community. Get inspired for your own on-chain identity.
-          </p>
-        </div>
 
-        {/* Main Content */}
-        <div className="max-w-4xl mx-auto">
-          <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-            <div className="p-16 text-center">
-              {/* Illustration */}
-              <div className="w-32 h-32 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center mx-auto mb-8 shadow-2xl">
-                <svg className="w-16 h-16 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+          {/* Search Bar */}
+          <div className="max-w-2xl mx-auto mb-16">
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-6 flex items-center pointer-events-none">
+                <svg className="h-6 w-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
               </div>
+              <input
+                type="text"
+                placeholder="Search profiles by username or .sui domain..."
+                className="w-full pl-16 pr-6 py-5 bg-gray-800/50 backdrop-blur-sm border border-gray-600/50 rounded-2xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-300 text-lg"
+              />
+            </div>
+          </div>
 
-              {/* Content */}
-              <h3 className="text-3xl font-bold mb-6 text-gray-900 dark:text-white">
-                Profiles Coming Soon
-              </h3>
-              <p className="text-lg text-gray-600 dark:text-gray-300 mb-10 max-w-2xl mx-auto leading-relaxed">
-                Once our smart contracts are deployed, this space will showcase incredible profiles created by our community. 
-                Be among the first to create your on-chain identity.
-              </p>
+          {/* Main Content */}
+          <div className="bg-gradient-to-br from-gray-800/50 to-gray-700/30 backdrop-blur-xl rounded-3xl shadow-2xl border border-gray-600/30 overflow-hidden">
+            <div className="p-16">
+              <div className="text-center max-w-3xl mx-auto">
+                {/* Icon */}
+                <div className="w-24 h-24 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-3xl flex items-center justify-center mx-auto mb-12 shadow-2xl shadow-indigo-500/25 hover:scale-110 transition-all duration-700 ease-out hover:rotate-3">
+                  <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                </div>
 
-              {/* Preview Cards */}
-              <div className="grid md:grid-cols-3 gap-6 mb-12">
-                <div className="p-6 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-800 rounded-2xl border-2 border-dashed border-gray-300 dark:border-gray-600">
-                  <div className="w-12 h-12 bg-gray-200 dark:bg-gray-600 rounded-full mx-auto mb-4"></div>
-                  <div className="h-4 bg-gray-200 dark:bg-gray-600 rounded mb-2"></div>
-                  <div className="h-3 bg-gray-200 dark:bg-gray-600 rounded w-3/4 mx-auto"></div>
-                </div>
-                <div className="p-6 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-800 rounded-2xl border-2 border-dashed border-gray-300 dark:border-gray-600">
-                  <div className="w-12 h-12 bg-gray-200 dark:bg-gray-600 rounded-full mx-auto mb-4"></div>
-                  <div className="h-4 bg-gray-200 dark:bg-gray-600 rounded mb-2"></div>
-                  <div className="h-3 bg-gray-200 dark:bg-gray-600 rounded w-3/4 mx-auto"></div>
-                </div>
-                <div className="p-6 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-800 rounded-2xl border-2 border-dashed border-gray-300 dark:border-gray-600">
-                  <div className="w-12 h-12 bg-gray-200 dark:bg-gray-600 rounded-full mx-auto mb-4"></div>
-                  <div className="h-4 bg-gray-200 dark:bg-gray-600 rounded mb-2"></div>
-                  <div className="h-3 bg-gray-200 dark:bg-gray-600 rounded w-3/4 mx-auto"></div>
-                </div>
-              </div>
+                {/* Status */}
+                <h3 className="text-4xl font-bold mb-8 text-white">
+                  Profiles Coming Soon
+                </h3>
+                <p className="text-lg text-gray-300 mb-12 leading-relaxed max-w-2xl mx-auto">
+                  Once our smart contracts are deployed, you'll be able to explore and discover 
+                  amazing on-chain profiles created by the community.
+                </p>
 
-              {/* CTA */}
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <a 
-                  href="/create" 
-                  className="inline-block px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200"
-                >
-                  Be the First to Create
-                </a>
-                <button className="px-8 py-4 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 font-semibold rounded-xl border-2 border-gray-200 dark:border-gray-600 hover:border-blue-300 dark:hover:border-blue-500 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-200">
-                  Get Notified
-                </button>
+                {/* Features Preview */}
+                <div className="grid md:grid-cols-3 gap-6 mb-16">
+                  {[
+                    { 
+                      icon: "M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z", 
+                      title: "Search Profiles",
+                      desc: "Find by username or .sui domain"
+                    },
+                    { 
+                      icon: "M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z", 
+                      title: "Browse Categories",
+                      desc: "Creators, developers, artists"
+                    },
+                    { 
+                      icon: "M13 10V3L4 14h7v7l9-11h-7z", 
+                      title: "Trending Profiles",
+                      desc: "Most visited and popular"
+                    }
+                  ].map((feature, index) => (
+                    <div key={index} className="p-8 bg-gray-700/30 backdrop-blur-sm rounded-2xl border border-gray-600/30 hover:border-indigo-400/30 transition-all duration-700 ease-out group hover:-translate-y-2">
+                      <div className="w-14 h-14 bg-indigo-500/20 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-all duration-700 ease-out group-hover:rotate-3">
+                        <svg className="w-7 h-7 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={feature.icon} />
+                        </svg>
+                      </div>
+                      <h4 className="text-xl font-bold text-white mb-3">{feature.title}</h4>
+                      <p className="text-gray-300 text-sm leading-relaxed">{feature.desc}</p>
+                    </div>
+                  ))}
+                </div>
+
+                {/* CTA */}
+                <div className="flex flex-col sm:flex-row gap-6 justify-center">
+                  <button className="px-10 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-2xl shadow-xl shadow-indigo-500/25 hover:shadow-2xl hover:shadow-indigo-500/40 transform hover:-translate-y-2 transition-all duration-700 ease-out hover:scale-105">
+                    Get Notified When Ready
+                  </button>
+                  <a
+                    href="/create"
+                    className="px-10 py-4 bg-gray-700/50 backdrop-blur-sm text-gray-200 font-semibold rounded-2xl border border-gray-600/50 hover:border-indigo-400/50 hover:bg-gray-600/50 hover:text-white transform hover:-translate-y-1 transition-all duration-700 ease-out hover:scale-105 inline-block text-center"
+                  >
+                    Create Your Profile
+                  </a>
+                </div>
               </div>
             </div>
           </div>
