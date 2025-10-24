@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useCurrentAccount } from '@mysten/dapp-kit';
-import { enokiFlow } from '../lib/enoki';
+import { enokiFlow, zkLoginProviders, getAuthUrl, completeZkLogin } from '../lib/enoki';
 import { AuthMethod, LoginProvider, UserSession } from '../types/profile';
 
 interface AuthContextType {
@@ -9,6 +9,8 @@ interface AuthContextType {
   isLoading: boolean;
   login: (method: 'wallet' | LoginProvider) => Promise<void>;
   logout: () => void;
+  handleZkLoginCallback: (authCode: string) => Promise<UserSession>;
+  zkLoginProviders: typeof zkLoginProviders;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -62,12 +64,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       setIsLoading(true);
       
-      const authUrl = await enokiFlow.createAuthorizationURL({
-        provider: method,
-        clientId: getClientId(method),
-        redirectUrl: `${window.location.origin}/auth/callback`,
-        network: 'testnet',
-      });
+      const authUrl = await getAuthUrl(method);
+      
+      // Store the provider for callback handling
+      localStorage.setItem('qedi_auth_provider', method);
 
       // Redirect to OAuth provider
       window.location.href = authUrl;
@@ -75,6 +75,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.error('Login error:', error);
       setIsLoading(false);
       throw error;
+    }
+  }
+
+  // Handle zkLogin callback
+  async function handleZkLoginCallback(authCode: string) {
+    try {
+      setIsLoading(true);
+      
+      const provider = localStorage.getItem('qedi_auth_provider') as LoginProvider;
+      if (!provider) {
+        throw new Error('No auth provider found');
+      }
+
+      const result = await completeZkLogin(authCode, provider);
+      
+      const newSession: UserSession = {
+        address: result.address,
+        authMethod: provider,
+        zkProof: result.zkProof,
+        userInfo: result.userInfo,
+      };
+
+      setSession(newSession);
+      localStorage.setItem('qedi_session', JSON.stringify(newSession));
+      localStorage.removeItem('qedi_auth_provider');
+      
+      return newSession;
+    } catch (error) {
+      console.error('zkLogin callback error:', error);
+      throw error;
+    } finally {
+      setIsLoading(false);
     }
   }
 
@@ -94,6 +126,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isLoading,
         login,
         logout,
+        handleZkLoginCallback,
+        zkLoginProviders,
       }}
     >
       {children}

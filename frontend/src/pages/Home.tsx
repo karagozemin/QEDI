@@ -126,16 +126,10 @@ export default function Home() {
             </div>
           </div>
         </div>
-        
-        {/* Gradual Transition */}
-        <div className="h-32 bg-gradient-to-b from-gray-900 via-gray-800 to-gray-700"></div>
-        <div className="h-32 bg-gradient-to-b from-gray-700 via-gray-600 to-gray-500"></div>
-        <div className="h-32 bg-gradient-to-b from-gray-500 via-blue-800 to-blue-700"></div>
-        <div className="h-32 bg-gradient-to-b from-blue-700 via-blue-600 to-indigo-600"></div>
       </div>
 
       {/* CTA Section */}
-      <div className="py-32 bg-gradient-to-br from-indigo-600 via-blue-600 to-purple-600 relative overflow-hidden">
+      <div className="py-32 bg-gradient-to-b from-gray-900 via-blue-800 to-blue-600 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-blue-600/90 to-purple-600/90"></div>
         <div className="container mx-auto px-4 text-center relative z-10">
           <h2 className="text-5xl font-bold text-white mb-8">
