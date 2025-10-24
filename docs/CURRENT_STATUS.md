@@ -1,22 +1,22 @@
-# 🎯 QEDİ - Güncel Durum Raporu
+# QEDI - Current Status Report
 
-**Tarih:** 24 Ekim 2025  
-**Durum:** 🟢 İlk Faz Tamamlandı
+**Date:** October 24, 2025  
+**Status:** First Phase Completed
 
 ---
 
-## ✅ Tamamlanan İşler
+## Completed Work
 
-### 1. Proje Kurulumu ✅
-- ✅ Proje klasör yapısı oluşturuldu
-- ✅ Git repository başlatıldı
-- ✅ README.md hazırlandı
-- ✅ .gitignore yapılandırıldı
+### 1. Project Setup
+- Project folder structure created
+- Git repository initialized
+- README.md prepared
+- .gitignore configured
 
-### 2. Frontend Setup ✅
-- ✅ React + Vite + TypeScript kuruldu
-- ✅ Tailwind CSS entegre edildi
-- ✅ Tüm gerekli paketler yüklendi:
+### 2. Frontend Setup
+- React + Vite + TypeScript installed
+- Tailwind CSS integrated
+- All required packages installed:
   - @mysten/sui
   - @mysten/dapp-kit
   - @mysten/enoki
@@ -24,170 +24,169 @@
   - zustand
   - @tanstack/react-query
 
-### 3. Authentication System ✅
-- ✅ Enoki SDK entegrasyonu
-- ✅ zkLogin konfigürasyonu
-- ✅ Auth Context oluşturuldu
-- ✅ Google login desteği
-- ✅ Wallet connect desteği
-- ✅ Session management
+### 3. Authentication System
+- Enoki SDK integration
+- zkLogin configuration
+- Auth Context created
+- Google login support
+- Wallet connect support
+- Session management
 
-### 4. Core Pages ✅
-- ✅ Landing/Home sayfası (hero, features, CTA)
-- ✅ Auth Callback sayfası (OAuth redirect handler)
-- ✅ Create sayfası (placeholder)
-- ✅ Explore sayfası (placeholder)
+### 4. Core Pages
+- Landing/Home page (hero, features, CTA)
+- Auth Callback page (OAuth redirect handler)
+- Create page (placeholder)
+- Explore page (placeholder)
 
-### 5. Components ✅
-- ✅ Navbar (responsive, wallet connect)
-- ✅ Routing yapılandırması
+### 5. Components
+- Navbar (responsive, wallet connect)
+- Routing configuration
 
-### 6. Configuration Files ✅
-- ✅ Sui network config
-- ✅ Enoki config
-- ✅ Constants ve environment variables
-- ✅ TypeScript types
+### 6. Configuration Files
+- Sui network config
+- Enoki config
+- Constants and environment variables
+- TypeScript types
 
 ---
 
-## 🚀 Şu An Çalışan Özellikler
+## Currently Working Features
 
 1. **Development Server**
-   - ✅ `npm run dev` ile çalışıyor
-   - ✅ http://localhost:5173 üzerinden erişilebilir
+   - `npm run dev` works
+   - Accessible at http://localhost:5173
 
 2. **UI/UX**
-   - ✅ Modern gradient tasarım
-   - ✅ Responsive layout
-   - ✅ Tailwind CSS ile styling
+   - Modern gradient design
+   - Responsive layout
+   - Tailwind CSS styling
 
 3. **Authentication**
-   - ✅ Google ile giriş butonu çalışıyor
-   - ✅ Wallet connect butonu entegre
-   - ⚠️ Henüz API keyleri girilmedi (test için gerekli)
+   - Google sign-in button works
+   - Wallet connect button integrated
+   - API keys need to be entered (for testing)
 
 4. **Navigation**
-   - ✅ Tüm sayfalar arası geçiş çalışıyor
-   - ✅ Protected routes (Create sayfası)
+   - All page transitions work
+   - Protected routes (Create page)
 
 ---
 
-## ⚠️ Eksik/Yapılacaklar
+## Missing/Todo
 
-### Acil (Öncelik 1)
+### Urgent (Priority 1)
 1. **Environment Variables**
-   - ❌ `.env.local` dosyası oluşturulmalı
-   - ❌ Enoki API key alınmalı
-   - ❌ Google OAuth Client ID alınmalı
+   - `.env.local` file needs to be created
+   - Enoki API key needed
+   - Google OAuth Client ID needed
 
 2. **Smart Contract**
-   - ❌ Move contract yazılmalı
-   - ❌ Deploy edilmeli
-   - ❌ Package ID frontend'e eklenmeli
+   - Move contract needs to be written
+   - Needs to be deployed
+   - Package ID needs to be added to frontend
 
-### Normal (Öncelik 2)
-3. **Profil İşlemleri**
-   - ❌ Profil oluşturma formu
-   - ❌ Profil görüntüleme
-   - ❌ Profil düzenleme
+### Normal (Priority 2)
+3. **Profile Operations**
+   - Profile creation form
+   - Profile display
+   - Profile editing
 
-4. **Walrus Entegrasyonu**
-   - ❌ Avatar upload
-   - ❌ Blob ID yönetimi
+4. **Walrus Integration**
+   - Avatar upload
+   - Blob ID management
 
-### Opsiyonel (Öncelik 3)
+### Optional (Priority 3)
 5. **Extra Features**
-   - ❌ Tema sistemi
-   - ❌ QR kod
-   - ❌ Share butonu
-   - ❌ Analytics
+   - Theme system
+   - QR code
+   - Share button
+   - Analytics
 
 ---
 
-## 📊 İlerleme
+## Progress
 
 ```
-Toplam Görevler: 18
-✅ Tamamlanan: 6 (33%)
-🔄 Devam Eden: 0 (0%)
-⏳ Bekleyen: 12 (67%)
+Total Tasks: 18
+Completed: 6 (33%)
+In Progress: 0 (0%)
+Pending: 12 (67%)
 ```
 
-**Kritik Yol:** Smart Contract → Profile Creation → Deployment
+**Critical Path:** Smart Contract → Profile Creation → Deployment
 
 ---
 
-## 🎯 Sonraki Adımlar
+## Next Steps
 
-### Şimdi Yapılması Gerekenler:
+### What Needs to Be Done Now:
 
-1. **Environment Setup (15 dk)**
+1. **Environment Setup (15 min)**
    ```bash
-   # Frontend klasöründe
+   # In frontend folder
    cp env.local.example .env.local
-   # Sonra API keylerini doldur
+   # Then fill in API keys
    ```
 
-2. **Enoki API Key Alma (10 dk)**
-   - https://getenoki.com/ adresine git
-   - Kayıt ol
-   - API key al
-   - `.env.local`'e yapıştır
+2. **Get Enoki API Key (10 min)**
+   - Go to https://getenoki.com/
+   - Sign up
+   - Get API key
+   - Paste into `.env.local`
 
-3. **Google OAuth Setup (15 dk)**
-   - https://console.cloud.google.com/ adresine git
-   - Proje oluştur
-   - OAuth credentials al
-   - `.env.local`'e yapıştır
+3. **Google OAuth Setup (15 min)**
+   - Go to https://console.cloud.google.com/
+   - Create project
+   - Get OAuth credentials
+   - Paste into `.env.local`
 
-4. **Test Login (5 dk)**
+4. **Test Login (5 min)**
    ```bash
    npm run dev
-   # http://localhost:5173'ü aç
-   # "Google ile Giriş Yap" butonuna tıkla
-   # Çalışıyor mu kontrol et
+   # Open http://localhost:5173
+   # Click "Sign in with Google" button
+   # Check if it works
    ```
 
-5. **Smart Contract Yazımına Başla**
-   - `move/` klasörüne Move projesi oluştur
-   - LinkTreeProfile struct'ını yaz
-   - Entry fonksiyonları ekle
-   - Test et ve deploy et
+5. **Start Smart Contract Development**
+   - Create Move project in `move/` folder
+   - Write LinkTreeProfile struct
+   - Add entry functions
+   - Test and deploy
 
 ---
 
-## 📝 Notlar
+## Notes
 
-### Teknik Detaylar
+### Technical Details
 - **Framework:** React 18 + Vite
-- **TypeScript:** Strict mode aktif
+- **TypeScript:** Strict mode active
 - **Styling:** Tailwind CSS 3.x
 - **Blockchain:** Sui Testnet
-- **Node Version:** v18+ gerekli
+- **Node Version:** v18+ required
 
-### Bilinen Sorunlar
-- ✅ Linting hatası yok
-- ✅ Build başarılı
-- ⚠️ API keyleri girilmediği için login henüz test edilemedi
+### Known Issues
+- No linting errors
+- Build successful
+- API keys not entered yet so login cannot be tested
 
-### Öneriler
-- zkLogin test etmek için mutlaka API keylerini gir
-- Smart contract öncelikli olarak tamamlanmalı
-- Arkadaşına Move öğrenme materyalleri ilet
-
----
-
-## 🎉 Başarılar
-
-- ✅ Sıfırdan çalışan bir React uygulaması kuruldu
-- ✅ Modern UI tasarımı oluşturuldu
-- ✅ zkLogin entegrasyonu hazır
-- ✅ Temiz kod yapısı ve TypeScript kullanımı
-- ✅ Dokümantasyon hazırlandı
+### Recommendations
+- Enter API keys to test zkLogin
+- Smart contract should be completed as priority
+- Share Move learning materials with teammate
 
 ---
 
-**Durum:** İyi yoldasınız! Temel yapı sağlam. Şimdi smart contract'a odaklanın.
+## Achievements
 
-**Sonraki Checkpoint:** Smart contract deploy edildikten sonra.
+- Working React application built from scratch
+- Modern UI design created
+- zkLogin integration ready
+- Clean code structure and TypeScript usage
+- Documentation prepared
 
+---
+
+**Status:** On track! Basic structure is solid. Now focus on smart contract.
+
+**Next Checkpoint:** After smart contract deployment.

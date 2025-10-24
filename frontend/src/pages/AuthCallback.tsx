@@ -66,10 +66,10 @@ export default function AuthCallback() {
           <>
             <div className="w-16 h-16 border-4 border-violet-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
             <h2 className="text-2xl font-bold text-gray-800 mb-2">
-              Giriş yapılıyor...
+              Signing in...
             </h2>
             <p className="text-gray-600">
-              Lütfen bekleyin, kimliğiniz doğrulanıyor.
+              Please wait, verifying your identity.
             </p>
           </>
         )}
@@ -92,10 +92,10 @@ export default function AuthCallback() {
               </svg>
             </div>
             <h2 className="text-2xl font-bold text-gray-800 mb-2">
-              Giriş Başarılı!
+              Sign in Successful!
             </h2>
             <p className="text-gray-600">
-              Yönlendiriliyorsunuz...
+              Redirecting...
             </p>
           </>
         )}
@@ -118,11 +118,11 @@ export default function AuthCallback() {
               </svg>
             </div>
             <h2 className="text-2xl font-bold text-gray-800 mb-2">
-              Giriş Başarısız
+              Sign in Failed
             </h2>
             <p className="text-gray-600 mb-4">{error}</p>
             <p className="text-sm text-gray-500">
-              Ana sayfaya yönlendiriliyorsunuz...
+              Redirecting to home page...
             </p>
           </>
         )}
@@ -130,4 +130,3 @@ export default function AuthCallback() {
     </div>
   );
 }
-

@@ -1,74 +1,74 @@
-# QEDİ - İş Bölümü ve Görevler
+# QEDI - Task Distribution and Progress
 
-## 🎯 Proje Durumu
+## Project Status
 
-### ✅ Tamamlanan Görevler
+### Completed Tasks
 
-- [x] Proje yapısı oluşturuldu
-- [x] React + Vite + TypeScript kurulumu
-- [x] Enoki SDK entegrasyonu (zkLogin)
-- [x] Auth Context ve Login sistemi
-- [x] Sui dApp Kit kurulumu
-- [x] Temel layout (Navbar) ve routing
-- [x] Landing sayfası
-- [x] Auth callback sayfası
+- [x] Project structure created
+- [x] React + Vite + TypeScript setup
+- [x] Enoki SDK integration (zkLogin)
+- [x] Auth Context and Login system
+- [x] Sui dApp Kit setup
+- [x] Basic layout (Navbar) and routing
+- [x] Landing page
+- [x] Auth callback page
 
-### 🔄 Devam Eden Görevler
+### Ongoing Tasks
 
-#### Öncelik 1: Smart Contract (Kritik)
-- [ ] Move contract: LinkTreeProfile struct ve fonksiyonlar
+#### Priority 1: Smart Contract (Critical)
+- [ ] Move contract: LinkTreeProfile struct and functions
 - [ ] Move contract: Registry (username mapping)
-- [ ] Contract testleri
-- [ ] Testnet'e deploy
+- [ ] Contract tests
+- [ ] Deploy to testnet
 
-#### Öncelik 2: Core Features
-- [ ] Profil oluşturma sayfası ve transaction
-- [ ] Profil görüntüleme sayfası
-- [ ] Profil düzenleme sayfası
-- [ ] Walrus entegrasyonu (avatar upload)
+#### Priority 2: Core Features
+- [ ] Profile creation page and transaction
+- [ ] Profile display page
+- [ ] Profile editing page
+- [ ] Walrus integration (avatar upload)
 
-#### Öncelik 3: Extra Features
-- [ ] Tema sistemi (6 tema)
-- [ ] Explore sayfası (profil listesi)
-- [ ] QR kod generator
-- [ ] Share butonu
+#### Priority 3: Extra Features
+- [ ] Theme system (6 themes)
+- [ ] Explore page (profile list)
+- [ ] QR code generator
+- [ ] Share button
 
-#### Öncelik 4: Deployment
+#### Priority 4: Deployment
 - [ ] Walrus Sites deployment
-- [ ] SuiNS domain bağlantısı
-- [ ] Test ve polish
+- [ ] SuiNS domain connection
+- [ ] Testing and polish
 
 ---
 
-## 👥 İş Bölümü
+## Task Distribution
 
-### 🔵 SENIN GÖREVLERİN (Ana Geliştirici)
+### Your Tasks (Main Developer)
 
-**Smart Contract (Kritik - %100 Öncelik)**
-- LinkTreeProfile ve Link struct'ları
-- create_profile, update_profile fonksiyonları
-- add_link, remove_link, update_avatar fonksiyonları
-- Registry modülü (dynamic fields)
-- Deploy ve test
+**Smart Contract (Critical - 100% Priority)**
+- LinkTreeProfile and Link structs
+- create_profile, update_profile functions
+- add_link, remove_link, update_avatar functions
+- Registry module (dynamic fields)
+- Deploy and test
 
 **Frontend Core Features**
-- Profil oluşturma sayfası
-- Profil görüntüleme sayfası
-- Profil düzenleme sayfası
-- Transaction builder'lar
-- Blockchain entegrasyonu
+- Profile creation page
+- Profile display page
+- Profile editing page
+- Transaction builders
+- Blockchain integration
 
 **Deployment**
 - Walrus Sites deployment
-- SuiNS konfigürasyonu
+- SuiNS configuration
 - Production build
 
-### 🟢 ARKADAŞININ GÖREVLERİ (Backend/Tools)
+### Teammate Tasks (Backend/Tools)
 
-**Move Öğrenme & Testing**
-- Move Book oku (https://move-book.com/move-basics/)
-- Contract testleri yaz
-- CLI test komutları dokümante et
+**Move Learning & Testing**
+- Read Move Book (https://move-book.com/move-basics/)
+- Write contract tests
+- Document CLI test commands
 
 **Backend Tooling**
 - Walrus upload service (Node.js)
@@ -77,47 +77,47 @@
 - Deploy automation script
 
 **Optional Frontend Support**
-- Tema CSS dosyaları
-- Explore sayfası geliştirme
-- QR kod özelliği
+- Theme CSS files
+- Explore page development
+- QR code feature
 
 ---
 
-## 📅 Zaman Çizelgesi (7 Gün)
+## Timeline (7 Days)
 
-### Gün 1-2: Foundation ✅ (Tamamlandı!)
-- [x] Proje setup
-- [x] Auth sistemi
-- [x] Landing sayfası
+### Day 1-2: Foundation (Completed!)
+- [x] Project setup
+- [x] Auth system
+- [x] Landing page
 
-### Gün 3: Smart Contract
-- [ ] Move contract yaz
-- [ ] Deploy et
-- [ ] Test et
+### Day 3: Smart Contract
+- [ ] Write Move contract
+- [ ] Deploy it
+- [ ] Test it
 
-### Gün 4: Profile Creation
-- [ ] Profil oluşturma UI
+### Day 4: Profile Creation
+- [ ] Profile creation UI
 - [ ] Transaction builder
 - [ ] Walrus avatar upload
 
-### Gün 5: Profile Display & Edit
-- [ ] Profil görüntüleme
-- [ ] Profil düzenleme
-- [ ] Tema sistemi
+### Day 5: Profile Display & Edit
+- [ ] Profile display
+- [ ] Profile editing
+- [ ] Theme system
 
-### Gün 6: Polish & Testing
-- [ ] Explore sayfası
-- [ ] Bug fix
+### Day 6: Polish & Testing
+- [ ] Explore page
+- [ ] Bug fixes
 - [ ] Mobile responsive
 
-### Gün 7: Deployment
+### Day 7: Deployment
 - [ ] Walrus Sites
 - [ ] SuiNS
 - [ ] Demo video
 
 ---
 
-## 🔗 Önemli Linkler
+## Important Links
 
 **Sui & Move**
 - https://move-book.com/
@@ -142,67 +142,66 @@
 
 ---
 
-## 🎮 Nasıl Çalışıyoruz?
+## How We Work
 
 ### Git Workflow
 
 ```bash
-# Ana branch: main
-# Senin branch'in: feature/core
-# Arkadaşının branch'i: feature/backend-tools
+# Main branch: main
+# Your branch: feature/core
+# Teammate branch: feature/backend-tools
 
-# Günlük workflow
+# Daily workflow
 git checkout feature/core
 git pull origin main
-# ... kod yaz ...
+# ... write code ...
 git add .
 git commit -m "feat: add profile creation page"
 git push origin feature/core
 ```
 
-### İletişim
-- Her gün Discord/WhatsApp'ta güncelleme
-- Büyük değişikliklerden önce haber ver
-- Merge'den önce bildir
+### Communication
+- Daily Discord/WhatsApp updates
+- Notify before major changes
+- Inform before merging
 
 ### Code Review
-- Pull request aç
-- En az 1 review al
-- Konfliktleri çöz
-- Merge et
+- Open pull request
+- Get at least 1 review
+- Resolve conflicts
+- Merge
 
 ---
 
-## 🚨 Acil Durumlar
+## Emergency Situations
 
-**Contract deploy edilemezse:**
-1. Faucet'ten token al
-2. Gas budget'i artır
-3. Syntax hatalarını kontrol et
+**If contract deployment fails:**
+1. Get tokens from faucet
+2. Increase gas budget
+3. Check syntax errors
 
-**Frontend çalışmazsa:**
-1. `npm install` yap
-2. `.env.local` dosyasını kontrol et
-3. Node_modules'u sil ve tekrar kur
+**If frontend breaks:**
+1. Run `npm install`
+2. Check `.env.local` file
+3. Delete node_modules and reinstall
 
-**zkLogin çalışmazsa:**
-1. Enoki API key kontrol et
-2. Google OAuth redirect URI kontrol et
-3. Console'da hataları incele
-
----
-
-## ✅ Definition of Done
-
-Bir görev bitmiş sayılır:
-- [ ] Kod yazıldı ve çalışıyor
-- [ ] Test edildi (manuel veya otomatik)
-- [ ] Dokümante edildi
-- [ ] Git'e push edildi
-- [ ] Takım arkadaşına haber verildi
+**If zkLogin doesn't work:**
+1. Check Enoki API key
+2. Verify Google OAuth redirect URI
+3. Check console for errors
 
 ---
 
-**Son Güncelleme:** 24 Ekim 2025  
-**Proje Durumu:** 🟢 İlk aşama tamamlandı, smart contract'a geçildi
+## Definition of Done
 
+A task is considered complete when:
+- [ ] Code is written and working
+- [ ] Tested (manual or automated)
+- [ ] Documented
+- [ ] Pushed to git
+- [ ] Team notified
+
+---
+
+**Last Update:** October 24, 2025  
+**Project Status:** First phase completed, moving to smart contract development

@@ -11,9 +11,9 @@ export default function Navbar() {
         <div className="flex items-center justify-between">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2">
-            <div className="text-2xl font-bold bg-gradient-to-r from-violet-600 to-fuchsia-600 bg-clip-text text-transparent">
-              QEDİ
-            </div>
+          <div className="text-2xl font-bold bg-gradient-to-r from-violet-600 to-fuchsia-600 bg-clip-text text-transparent">
+            QEDI
+          </div>
           </Link>
 
           {/* Navigation */}
@@ -22,7 +22,7 @@ export default function Navbar() {
               to="/explore"
               className="text-gray-700 hover:text-violet-600 font-medium transition"
             >
-              Keşfet
+              Explore
             </Link>
             {session && (
               <>
@@ -30,13 +30,13 @@ export default function Navbar() {
                   to="/create"
                   className="text-gray-700 hover:text-violet-600 font-medium transition"
                 >
-                  Profil Oluştur
+                  Create Profile
                 </Link>
                 <Link
                   to={`/${session.address}`}
                   className="text-gray-700 hover:text-violet-600 font-medium transition"
                 >
-                  Profilim
+                  My Profile
                 </Link>
               </>
             )}
@@ -53,7 +53,7 @@ export default function Navbar() {
                   onClick={logout}
                   className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 transition"
                 >
-                  Çıkış
+                  Logout
                 </button>
               </div>
             ) : (

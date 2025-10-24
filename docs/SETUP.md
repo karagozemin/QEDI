@@ -1,22 +1,22 @@
-# QEDİ - Setup Guide
+# QEDI - Setup Guide
 
-## 📋 Prerequisites
+## Prerequisites
 
-- Node.js 18+ ve npm
+- Node.js 18+ and npm
 - Sui CLI (https://docs.sui.io/guides/developer/getting-started/sui-install)
 - Walrus CLI (https://docs.wal.app/usage/setup.html)
 - Git
 
-## 🚀 Kurulum
+## Installation
 
-### 1. Projeyi Klonlayın
+### 1. Clone Repository
 
 ```bash
-git clone https://github.com/yourusername/QEDİ.git
-cd QEDİ
+git clone https://github.com/karagozemin/QEDI-.git
+cd QEDI
 ```
 
-### 2. Frontend Kurulumu
+### 2. Frontend Setup
 
 ```bash
 cd frontend
@@ -25,33 +25,33 @@ npm install
 
 ### 3. Environment Variables
 
-`.env.local` dosyası oluşturun:
+Create `.env.local` file:
 
 ```bash
 cp env.local.example .env.local
 ```
 
-Aşağıdaki değerleri doldurun:
+Fill in the following values:
 
-#### Enoki API Key Alma
+#### Get Enoki API Key
 
-1. https://getenoki.com/ adresine gidin
-2. Kayıt olun / Giriş yapın
-3. API Key oluşturun
-4. `VITE_ENOKI_API_KEY` değerine yapıştırın
+1. Visit https://getenoki.com/
+2. Sign up / Sign in
+3. Create API Key
+4. Paste into `VITE_ENOKI_API_KEY`
 
-#### Google OAuth Client ID Alma
+#### Get Google OAuth Client ID
 
-1. https://console.cloud.google.com/ adresine gidin
-2. Yeni proje oluşturun
-3. "APIs & Services" > "Credentials"
-4. "Create Credentials" > "OAuth 2.0 Client ID"
+1. Visit https://console.cloud.google.com/
+2. Create new project
+3. Go to "APIs & Services" > "Credentials"
+4. Click "Create Credentials" > "OAuth 2.0 Client ID"
 5. Application type: "Web application"
 6. Authorized redirect URIs: 
    - `http://localhost:5173/auth/callback`
    - `https://yourdomain.com/auth/callback`
-7. Client ID'yi kopyalayın
-8. `VITE_GOOGLE_CLIENT_ID` değerine yapıştırın
+7. Copy Client ID
+8. Paste into `VITE_GOOGLE_CLIENT_ID`
 
 ### 4. Development Server
 
@@ -61,21 +61,21 @@ npm run dev
 
 Frontend: http://localhost:5173
 
-## 🏗️ Move Contract Deployment
+## Move Contract Deployment
 
 ### 1. Sui Wallet Setup
 
 ```bash
-# Sui client başlat
+# Initialize Sui client
 sui client
 
-# Testnet'e geç
+# Switch to testnet
 sui client switch --env testnet
 
-# Aktif adresi göster
+# Show active address
 sui client active-address
 
-# Faucet'ten token al
+# Get tokens from faucet
 curl --location --request POST 'https://faucet.testnet.sui.io/gas' \
   --header 'Content-Type: application/json' \
   --data-raw '{
@@ -93,57 +93,57 @@ sui move build
 sui client publish --gas-budget 100000000
 ```
 
-Deploy çıktısından `Package ID` ve `Registry Object ID`'yi kaydedin.
+Save `Package ID` and `Registry Object ID` from deploy output.
 
 ### 3. Update Frontend Config
 
-`.env.local` dosyasını güncelleyin:
+Update `.env.local` file:
 
 ```
 VITE_PACKAGE_ID=0x...
 VITE_REGISTRY_ID=0x...
 ```
 
-## 🧪 Test
+## Testing
 
 ```bash
-# Frontend testleri
+# Frontend tests
 cd frontend
 npm run test
 
-# Move testleri
+# Move tests
 cd move
 sui move test
 ```
 
-## 📦 Production Build
+## Production Build
 
 ```bash
 cd frontend
 npm run build
 ```
 
-Build dosyaları `dist/` klasöründe oluşur.
+Build files are created in `dist/` folder.
 
-## 🌐 Walrus Sites Deployment
+## Walrus Sites Deployment
 
 ```bash
-# Site builder kur
+# Install site builder
 # https://docs.wal.app/walrus-sites/tutorial-install.html
 
 # Deploy
 site-builder deploy ./frontend/dist --epochs 10
 ```
 
-## 🔗 SuiNS Domain
+## SuiNS Domain
 
-1. https://testnet.suins.io/ adresine gidin
-2. İstediğiniz `.sui` domainini alın
-3. Domain'i Walrus Site object ID'ye yönlendirin
+1. Visit https://testnet.suins.io/
+2. Purchase your desired `.sui` domain
+3. Point domain to Walrus Site object ID
 
-## 🐛 Troubleshooting
+## Troubleshooting
 
-### "Module not found" hatası
+### "Module not found" error
 
 ```bash
 cd frontend
@@ -151,20 +151,19 @@ rm -rf node_modules package-lock.json
 npm install
 ```
 
-### Wallet bağlanmıyor
+### Wallet not connecting
 
-- Sui Wallet extension'ı yüklü olduğundan emin olun
-- Network'ün testnet olduğunu kontrol edin
+- Make sure Sui Wallet extension is installed
+- Check that network is set to testnet
 
-### zkLogin çalışmıyor
+### zkLogin not working
 
-- Enoki API key'in doğru olduğundan emin olun
-- Google OAuth redirect URI'lerinin doğru olduğunu kontrol edin
+- Verify Enoki API key is correct
+- Check Google OAuth redirect URIs are correct
 
-## 📚 Daha Fazla Bilgi
+## More Information
 
 - [Sui Documentation](https://docs.sui.io/)
 - [Walrus Documentation](https://docs.wal.app/)
 - [Enoki Documentation](https://docs.enoki.mystenlabs.com/)
 - [dApp Kit Documentation](https://sdk.mystenlabs.com/dapp-kit)
-

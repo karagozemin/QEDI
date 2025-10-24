@@ -9,7 +9,7 @@ export default function Home() {
       await login('google');
     } catch (error) {
       console.error('Login failed:', error);
-      alert('Giriş yapılamadı. Lütfen tekrar deneyin.');
+      alert('Login failed. Please try again.');
     }
   };
 
@@ -21,20 +21,20 @@ export default function Home() {
           {/* Badge */}
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-violet-100 text-violet-700 text-sm font-medium mb-6">
             <span className="w-2 h-2 bg-violet-500 rounded-full animate-pulse"></span>
-            Sui Blockchain üzerinde çalışır
+            Powered by Sui Blockchain
           </div>
 
           {/* Heading */}
           <h1 className="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-violet-600 via-fuchsia-600 to-pink-600 bg-clip-text text-transparent">
-            Linkleriniz,
+            Your Links,
             <br />
-            Blockchain'de
+            On-Chain Forever
           </h1>
 
           {/* Description */}
           <p className="text-xl md:text-2xl text-gray-600 mb-10 max-w-2xl mx-auto">
-            QEDİ ile tüm sosyal medya ve web bağlantılarınızı tek bir on-chain profilde toplayın.
-            Merkezi olmayan, sansür edilemez, sonsuza kadar sizin.
+            QEDI brings all your social media and web links together in one decentralized profile.
+            Censorship-resistant, permanent, and truly yours.
           </p>
 
           {/* CTA Buttons */}
@@ -44,7 +44,7 @@ export default function Home() {
                 to="/create"
                 className="px-8 py-4 bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white font-semibold rounded-xl hover:shadow-xl hover:scale-105 transition-all"
               >
-                Profilini Oluştur
+                Create Your Profile
               </Link>
             ) : (
               <>
@@ -71,14 +71,14 @@ export default function Home() {
                       d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
                     />
                   </svg>
-                  {isLoading ? 'Giriş yapılıyor...' : 'Google ile Giriş Yap'}
+                  {isLoading ? 'Signing in...' : 'Sign in with Google'}
                 </button>
                 
                 <Link
                   to="/explore"
                   className="px-8 py-4 bg-white text-gray-700 font-semibold rounded-xl border-2 border-gray-200 hover:border-violet-600 hover:text-violet-600 transition-all"
                 >
-                  Profilleri Keşfet
+                  Explore Profiles
                 </Link>
               </>
             )}
@@ -89,30 +89,30 @@ export default function Home() {
             <div className="p-6 rounded-2xl bg-white/50 backdrop-blur border border-white">
               <div className="text-4xl mb-4">🔐</div>
               <h3 className="text-xl font-bold mb-2 text-gray-800">
-                Güvenli & Merkezi Olmayan
+                Secure & Decentralized
               </h3>
               <p className="text-gray-600">
-                Verileriniz Sui blockchain'de. Kimse silemez, değiştiremez.
+                Your data lives on Sui blockchain. No one can delete or modify it.
               </p>
             </div>
 
             <div className="p-6 rounded-2xl bg-white/50 backdrop-blur border border-white">
               <div className="text-4xl mb-4">⚡</div>
               <h3 className="text-xl font-bold mb-2 text-gray-800">
-                Gas Ücreti Yok
+                Zero Gas Fees
               </h3>
               <p className="text-gray-600">
-                Sponsored transactions ile hiç gas ücreti ödemeden kullanın.
+                Use sponsored transactions - no need to pay gas fees ever.
               </p>
             </div>
 
             <div className="p-6 rounded-2xl bg-white/50 backdrop-blur border border-white">
               <div className="text-4xl mb-4">🎨</div>
               <h3 className="text-xl font-bold mb-2 text-gray-800">
-                Özelleştirilebilir
+                Fully Customizable
               </h3>
               <p className="text-gray-600">
-                Birçok tema ve stil seçeneği ile profilinizi kişiselleştirin.
+                Choose from multiple themes and customize your profile style.
               </p>
             </div>
           </div>
@@ -121,4 +121,3 @@ export default function Home() {
     </div>
   );
 }
-
