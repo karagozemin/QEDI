@@ -1,5 +1,9 @@
 # QEDI - On-Chain LinkTree Platform
 
+<div align="center">
+  <img src="frontend/public/logo.png" alt="QEDI Logo" width="120" height="120" />
+</div>
+
 **The Web3 LinkTree with Web2 Simplicity**
 
 A production-ready full-stack decentralized application for creating and managing LinkTree profiles on Sui blockchain. Features zkLogin authentication (Google sign-in), sponsored transactions (zero gas fees), batch operations (PTB), and decentralized hosting on Walrus Sites.
