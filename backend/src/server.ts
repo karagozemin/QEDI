@@ -256,6 +256,62 @@ app.post('/api/execute-transaction', async (req, res) => {
   }
 });
 
+// Track Link Click
+app.post('/api/track-click', async (req, res) => {
+  try {
+    const { profileId, linkIndex } = req.body;
+
+    console.log('Tracking link click:', {
+      profileId: `${profileId.slice(0, 8)}...${profileId.slice(-4)}`,
+      linkIndex
+    });
+
+    // Create the click tracking transaction
+    const tx = new Transaction();
+    tx.moveCall({
+      target: `${process.env.PACKAGE_ID}::linktree::click_link`,
+      arguments: [
+        tx.object(profileId),
+        tx.pure.u64(linkIndex),
+        tx.object('0x6'), // Clock object ID
+      ],
+    });
+
+    // Build transaction bytes
+    const txBytes = await tx.build({
+      client: suiClient,
+      onlyTransactionKind: true,
+    });
+
+    // Create sponsored transaction
+    const sponsored = await enokiClient.createSponsoredTransaction({
+      transactionKindBytes: toBase64(txBytes),
+      network: (process.env.SUI_NETWORK as any) || 'testnet',
+      sender: '0x0000000000000000000000000000000000000000000000000000000000000000', // System sender
+      allowedMoveCallTargets: [`${process.env.PACKAGE_ID}::linktree::click_link`],
+      allowedAddresses: ['0x0000000000000000000000000000000000000000000000000000000000000000']
+    });
+
+    console.log('Click tracking transaction created:', {
+      digest: sponsored.digest,
+      bytesLength: sponsored.bytes.length
+    });
+
+    res.json({ 
+      digest: sponsored.digest,
+      bytes: sponsored.bytes 
+    });
+
+  } catch (error) {
+    console.error('Click tracking failed:', error);
+    
+    res.status(500).json({ 
+      error: 'Failed to track click',
+      details: error instanceof Error ? error.message : String(error)
+    });
+  }
+});
+
 // Start server
 app.listen(PORT, () => {
   console.log(`🚀 QEDI Backend started on port ${PORT}`);
