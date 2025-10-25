@@ -124,7 +124,7 @@ QEDI/
 
 ```bash
 git clone <repository-url>
-cd QEDİ
+cd QEDI
 
 # Install frontend dependencies
 cd frontend
