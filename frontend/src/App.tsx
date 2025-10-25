@@ -30,7 +30,7 @@ registerEnokiWallets({
   network: 'testnet',
   providers: {
     google: {
-      clientId: '704942782239-4hvbm0ff4s4rfc8455ikacse6k45rrj9.apps.googleusercontent.com',
+      clientId: import.meta.env.VITE_GOOGLE_CLIENT_ID || '704942782239-4hvbm0ff4s4rfc8455ikacse6k45rrj9.apps.googleusercontent.com',
     },
     // facebook: {
     //   clientId: import.meta.env.VITE_FACEBOOK_CLIENT_ID || '',
