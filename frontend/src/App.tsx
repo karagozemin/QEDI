@@ -139,14 +139,14 @@ function NavbarContent() {
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           {/* Logo */}
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
-              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-              </svg>
-            </div>
+          <a href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity duration-300">
+            <img 
+              src="/logo.jpeg" 
+              alt="QEDI Logo" 
+              className="w-10 h-10 rounded-xl object-cover shadow-lg"
+            />
             <span className="text-2xl font-bold text-white">QEDI</span>
-          </div>
+          </a>
 
           {/* Navigation - Centered */}
                   <div className="hidden md:flex items-center gap-8 absolute left-1/2 transform -translate-x-1/2">
@@ -167,12 +167,7 @@ function NavbarContent() {
               {/* Right Section */}
               <div className="flex items-center gap-4">
                 {currentAccount ? (
-                  <div className="flex items-center gap-3">
-                    <span className="hidden sm:block text-gray-300 text-sm">
-                      {`${currentAccount.address.slice(0, 6)}...${currentAccount.address.slice(-4)}`}
-                    </span>
-                    <ConnectButton />
-                  </div>
+                  <ConnectButton />
                 ) : (
                   <>
                     <div className="relative">
