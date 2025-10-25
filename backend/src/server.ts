@@ -112,9 +112,29 @@ app.post('/api/create-profile', async (req, res) => {
   } catch (error) {
     console.error('Create profile transaction failed:', error);
     
+    // Log more details for debugging
+    if (error instanceof Error) {
+      console.error('Error message:', error.message);
+      console.error('Error stack:', error.stack);
+    }
+    
+    // Log environment variables (without sensitive data)
+    console.error('Environment check:', {
+      hasEnokiPrivateKey: !!process.env.ENOKI_PRIVATE_KEY,
+      enokiKeyLength: process.env.ENOKI_PRIVATE_KEY?.length,
+      packageId: process.env.PACKAGE_ID,
+      network: process.env.SUI_NETWORK,
+      registryId: process.env.REGISTRY_ID
+    });
+    
     res.status(500).json({ 
       error: 'Failed to create sponsored transaction',
-      details: error instanceof Error ? error.message : String(error)
+      details: error instanceof Error ? error.message : String(error),
+      debug: {
+        hasEnokiKey: !!process.env.ENOKI_PRIVATE_KEY,
+        network: process.env.SUI_NETWORK,
+        packageId: process.env.PACKAGE_ID
+      }
     });
   }
 });
