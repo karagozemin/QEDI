@@ -1,13 +1,14 @@
 import { useState } from 'react';
-import { useCurrentAccount, useSignAndExecuteTransaction } from '@mysten/dapp-kit';
-import { createProfileTransaction, addLinkTransaction, executeWithSponsorship } from '../lib/sui-client';
+import { useCurrentAccount, useSignAndExecuteTransaction, useWallets } from '@mysten/dapp-kit';
+import { isEnokiWallet } from '@mysten/enoki';
+import { createProfileTransaction, addLinkTransaction } from '../lib/sui-client';
 
 export default function Create() {
   const currentAccount = useCurrentAccount();
+  const wallets = useWallets();
   const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction();
   const [step, setStep] = useState(1);
   const [isCreating, setIsCreating] = useState(false);
-  const [useSponsorship, setUseSponsorship] = useState(true); // Default to sponsored transactions
   const [formData, setFormData] = useState({
     username: '',
     displayName: '',
@@ -16,6 +17,12 @@ export default function Create() {
     theme: 'default',
     links: [] as Array<{ title: string; url: string; icon: string }>
   });
+
+  // Check if current wallet is an Enoki wallet (zkLogin)
+  const connectedWallet = wallets.find(wallet => 
+    wallet.accounts.some(account => account.address === currentAccount?.address)
+  );
+  const isEnokiConnected = connectedWallet && isEnokiWallet(connectedWallet);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -58,7 +65,7 @@ export default function Create() {
     setIsCreating(true);
 
     try {
-      // Step 1: Create the profile
+      // Create the profile transaction
       const profileTx = createProfileTransaction(
         formData.username,
         formData.displayName,
@@ -67,131 +74,113 @@ export default function Create() {
         formData.theme
       );
 
-      if (useSponsorship) {
-        // Use sponsored transaction (gas-free)
-        console.log('Using sponsored transaction for profile creation...');
-        
-        try {
-          const result = await executeWithSponsorship(profileTx);
-          console.log('Sponsored profile creation successful:', result);
-          
-          alert(`Profile created successfully with sponsored transaction! No gas fees paid.`);
-          
-          // Reset form
-          setFormData({
-            username: '',
-            displayName: '',
-            bio: '',
-            avatarUrl: '',
-            theme: 'default',
-            links: []
-          });
-          setStep(1);
-        } catch (sponsorError) {
-          console.error('Sponsored transaction failed, falling back to regular transaction:', sponsorError);
-          alert('Sponsored transaction failed. Please try with regular wallet transaction.');
-        }
-      } else {
-        // Use regular wallet transaction
-        signAndExecuteTransaction(
-          {
-            transaction: profileTx,
-          },
-          {
-            onSuccess: async (result) => {
-              console.log('Profile created successfully:', result);
-              
-              // Step 2: Add links if any exist
-              if (formData.links.length > 0) {
-                try {
-                  // Get the created profile ID from the transaction result
-                  let profileId = null;
-                  
-                  // Try different ways to get the profile ID
-                  if (result.effects && typeof result.effects === 'object') {
-                    const effects = result.effects as any;
-                    if (effects.created && effects.created.length > 0) {
-                      profileId = effects.created[0].reference?.objectId;
-                    }
+      // Use Enoki wallet (automatic sponsored transactions) or regular wallet
+      signAndExecuteTransaction(
+        {
+          transaction: profileTx,
+        },
+        {
+          onSuccess: async (result) => {
+            console.log('Profile created successfully:', result);
+            
+            // Step 2: Add links if any exist
+            if (formData.links.length > 0) {
+              try {
+                // Get the created profile ID from the transaction result
+                let profileId = null;
+                
+                // Try different ways to get the profile ID
+                if (result.effects && typeof result.effects === 'object') {
+                  const effects = result.effects as any;
+                  if (effects.created && effects.created.length > 0) {
+                    profileId = effects.created[0].reference?.objectId;
                   }
-                  
-                  // Alternative: check if result has objectChanges property
-                  if (!profileId && 'objectChanges' in result) {
-                    const objectChanges = (result as any).objectChanges;
-                    if (Array.isArray(objectChanges)) {
-                      const createdObject = objectChanges.find((change: any) => change.type === 'created');
-                      if (createdObject) {
-                        profileId = createdObject.objectId;
-                      }
-                    }
-                  }
-                  
-                  console.log('Extracted profile ID:', profileId);
-                  
-                  if (profileId) {
-                    console.log('Adding links to profile:', profileId);
-                    
-                    // Add each link sequentially
-                    for (let i = 0; i < formData.links.length; i++) {
-                      const link = formData.links[i];
-                      if (link.title && link.url) {
-                        console.log(`Adding link ${i + 1}:`, link);
-                        
-                        const linkTx = addLinkTransaction(
-                          profileId,
-                          link.title,
-                          link.url,
-                          link.icon
-                        );
-
-                        await new Promise((resolve, reject) => {
-                          signAndExecuteTransaction(
-                            { transaction: linkTx },
-                            {
-                              onSuccess: (linkResult) => {
-                                console.log(`Link ${i + 1} added successfully:`, linkResult);
-                                resolve(linkResult);
-                              },
-                              onError: (linkError) => {
-                                console.error(`Failed to add link ${i + 1}:`, linkError);
-                                reject(linkError);
-                              },
-                            }
-                          );
-                        });
-                      }
-                    }
-                    
-                    alert(`Profile created successfully with ${formData.links.length} links! Transaction: ${result.digest}`);
-                  } else {
-                    alert('Profile created but could not add links. Please add them manually.');
-                  }
-                } catch (linkError) {
-                  console.error('Error adding links:', linkError);
-                  alert('Profile created but some links failed to add. Please add them manually.');
                 }
-              } else {
-                alert(`Profile created successfully! Transaction: ${result.digest}`);
-              }
+                
+                // Alternative: check if result has objectChanges property
+                if (!profileId && 'objectChanges' in result) {
+                  const objectChanges = (result as any).objectChanges;
+                  if (Array.isArray(objectChanges)) {
+                    const createdObject = objectChanges.find((change: any) => change.type === 'created');
+                    if (createdObject) {
+                      profileId = createdObject.objectId;
+                    }
+                  }
+                }
+                
+                console.log('Extracted profile ID:', profileId);
+                
+                if (profileId) {
+                  console.log('Adding links to profile:', profileId);
+                  
+                  // Add each link sequentially
+                  for (let i = 0; i < formData.links.length; i++) {
+                    const link = formData.links[i];
+                    if (link.title && link.url) {
+                      console.log(`Adding link ${i + 1}:`, link);
+                      
+                      const linkTx = addLinkTransaction(
+                        profileId,
+                        link.title,
+                        link.url,
+                        link.icon
+                      );
 
-              // Reset form
-              setFormData({
-                username: '',
-                displayName: '',
-                bio: '',
-                avatarUrl: '',
-                theme: 'default',
-                links: []
-              });
-              setStep(1);
-            },
-            onError: (error) => {
-              console.error('Profile creation failed:', error);
-              alert(`Profile creation failed: ${error.message}`);
-            },
-          }
-        );
-      }
+                      await new Promise((resolve, reject) => {
+                        signAndExecuteTransaction(
+                          { transaction: linkTx },
+                          {
+                            onSuccess: (linkResult) => {
+                              console.log(`Link ${i + 1} added successfully:`, linkResult);
+                              resolve(linkResult);
+                            },
+                            onError: (linkError) => {
+                              console.error(`Failed to add link ${i + 1}:`, linkError);
+                              reject(linkError);
+                            },
+                          }
+                        );
+                      });
+                    }
+                  }
+                  
+                  const successMessage = isEnokiConnected 
+                    ? `Profile created successfully with ${formData.links.length} links! (Gas-free with zkLogin)`
+                    : `Profile created successfully with ${formData.links.length} links! Transaction: ${result.digest}`;
+                  
+                  alert(successMessage);
+                } else {
+                  alert('Profile created but could not add links. Please add them manually.');
+                }
+              } catch (linkError) {
+                console.error('Error adding links:', linkError);
+                alert('Profile created but some links failed to add. Please add them manually.');
+              }
+            } else {
+              const successMessage = isEnokiConnected 
+                ? 'Profile created successfully! (Gas-free with zkLogin)'
+                : `Profile created successfully! Transaction: ${result.digest}`;
+              
+              alert(successMessage);
+            }
+
+            // Reset form
+            setFormData({
+              username: '',
+              displayName: '',
+              bio: '',
+              avatarUrl: '',
+              theme: 'default',
+              links: []
+            });
+            setStep(1);
+          },
+          onError: (error) => {
+            console.error('Profile creation failed:', error);
+            alert(`Profile creation failed: ${error.message}`);
+          },
+        }
+      );
     } catch (error) {
       console.error('Transaction preparation failed:', error);
       alert('Failed to prepare transaction');
@@ -211,13 +200,18 @@ export default function Create() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                 </svg>
               </div>
-              <h2 className="text-4xl font-bold text-white mb-6">Connect Your Wallet</h2>
-              <p className="text-xl text-gray-300 mb-8">
-                Connect your Sui wallet to create your on-chain profile
-              </p>
-              <button className="px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-2xl hover:shadow-xl hover:shadow-blue-500/25 transform hover:-translate-y-1 transition-all duration-500 ease-out">
-                Connect Wallet
-              </button>
+                  <h2 className="text-4xl font-bold text-white mb-6">Authentication Required</h2>
+                  <p className="text-xl text-gray-300 mb-8">
+                    Connect your Sui wallet or sign in with zkLogin to create your on-chain profile
+                  </p>
+                  <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                    <button className="px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-2xl hover:shadow-xl hover:shadow-blue-500/25 transform hover:-translate-y-1 transition-all duration-500 ease-out">
+                      Connect Wallet
+                    </button>
+                    <button className="px-8 py-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white font-semibold rounded-2xl hover:shadow-xl hover:shadow-green-500/25 transform hover:-translate-y-1 transition-all duration-500 ease-out">
+                      Sign In with zkLogin
+                    </button>
+                  </div>
             </div>
           </div>
         </div>
@@ -465,39 +459,24 @@ export default function Create() {
                       </div>
                     </div>
 
-                    {/* Sponsored Transaction Toggle */}
-                    <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4 mb-6">
-                      <div className="flex items-center justify-between">
+                    {/* Enoki zkLogin Info */}
+                    {isEnokiConnected && (
+                      <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-4 mb-6">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-blue-500/20 rounded-xl flex items-center justify-center">
-                            <svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                          <div className="w-10 h-10 bg-green-500/20 rounded-xl flex items-center justify-center">
+                            <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                           </div>
                           <div>
-                            <h4 className="text-blue-300 font-semibold">Gas-Free Transaction</h4>
-                            <p className="text-blue-200 text-sm">Use sponsored transactions (no gas fees)</p>
+                            <h4 className="text-green-300 font-semibold">zkLogin Connected</h4>
+                            <p className="text-green-200 text-sm">
+                              Your transactions will be automatically sponsored - no gas fees!
+                            </p>
                           </div>
                         </div>
-                        <button
-                          onClick={() => setUseSponsorship(!useSponsorship)}
-                          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-300 ${
-                            useSponsorship ? 'bg-blue-600' : 'bg-gray-600'
-                          }`}
-                        >
-                          <span
-                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-300 ${
-                              useSponsorship ? 'translate-x-6' : 'translate-x-1'
-                            }`}
-                          />
-                        </button>
                       </div>
-                      {useSponsorship && (
-                        <div className="mt-3 text-xs text-blue-200">
-                          ✨ Your transaction will be sponsored by Enoki - no SUI tokens required!
-                        </div>
-                      )}
-                    </div>
+                    )}
 
                 <div className="flex justify-between">
                   <button

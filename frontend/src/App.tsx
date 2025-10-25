@@ -1,8 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { SuiClientProvider, WalletProvider, ConnectButton, useCurrentAccount } from '@mysten/dapp-kit';
+import { registerEnokiWallets } from '@mysten/enoki';
+import { SuiClient } from '@mysten/sui/client';
 import { networkConfig } from './config/networks';
+import { ENOKI_API_KEY } from './lib/constants';
 import '@mysten/dapp-kit/dist/index.css';
 
 // Import pages
@@ -15,104 +18,106 @@ import AuthCallback from './pages/AuthCallback';
 
 const queryClient = new QueryClient();
 
-// zkLogin buttons with Passkey support
-function ZkLoginButtons({ onClose }: { onClose: () => void }) {
-  const [isLoading, setIsLoading] = useState(false);
-  const [loadingProvider, setLoadingProvider] = useState<string | null>(null);
+// Initialize Sui client for Enoki
+const suiClient = new SuiClient({
+  url: 'https://fullnode.testnet.sui.io:443'
+});
 
-  const handleLogin = async (provider: string) => {
-    setIsLoading(true);
-    setLoadingProvider(provider);
-    
+// Register Enoki wallets
+registerEnokiWallets({
+  apiKey: ENOKI_API_KEY,
+  client: suiClient,
+  network: 'testnet',
+  providers: {
+    google: {
+      clientId: '704942782239-4hvbm0ff4s4rfc8455ikacse6k45rrj9.apps.googleusercontent.com',
+    },
+    // facebook: {
+    //   clientId: import.meta.env.VITE_FACEBOOK_CLIENT_ID || '',
+    // },
+    // twitch: {
+    //   clientId: import.meta.env.VITE_TWITCH_CLIENT_ID || '',
+    // },
+  },
+});
+
+// Custom Enoki login buttons using useConnectWallet
+import { useConnectWallet, useWallets } from '@mysten/dapp-kit';
+import { isEnokiWallet, type EnokiWallet, type AuthProvider } from '@mysten/enoki';
+
+function EnokiLoginButtons({ onClose }: { onClose: () => void }) {
+  const { mutate: connectWallet } = useConnectWallet();
+  const wallets = useWallets().filter(isEnokiWallet);
+  
+  const walletsByProvider = wallets.reduce(
+    (map, wallet) => map.set(wallet.provider, wallet),
+    new Map<AuthProvider, EnokiWallet>(),
+  );
+
+  const googleWallet = walletsByProvider.get('google');
+  const facebookWallet = walletsByProvider.get('facebook');
+  const twitchWallet = walletsByProvider.get('twitch');
+
+  const handleConnect = (wallet: EnokiWallet, providerName: string) => {
     try {
-      if (provider === 'passkey') {
-        // Handle Passkey authentication directly
-        const { authenticateWithPasskey } = await import('./lib/enoki');
-        const result = await authenticateWithPasskey();
-        console.log('Passkey authentication successful:', result);
-        
-        // Store session
-        const session = {
-          address: result.address,
-          authMethod: 'passkey',
-          zkProof: result.zkProof,
-          userInfo: result.userInfo,
-        };
-        localStorage.setItem('qedi_session', JSON.stringify(session));
-        
-        // Close dropdown and refresh
-        onClose();
-        window.location.reload();
-      } else {
-        // Handle OAuth providers
-        const { getAuthUrl } = await import('./lib/enoki');
-        const authUrl = await getAuthUrl(provider as any);
-        
-        // Store provider for callback
-        localStorage.setItem('qedi_auth_provider', provider);
-        
-        // Redirect to OAuth
-        window.location.href = authUrl as string;
-      }
+      connectWallet({ wallet });
+      onClose();
     } catch (error) {
-      console.error('Login failed:', error);
-      alert(`Login failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    } finally {
-      setIsLoading(false);
-      setLoadingProvider(null);
+      console.error(`${providerName} login failed:`, error);
+      alert(`${providerName} login failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 
-  // Device info function removed since Passkey is temporarily disabled
-
   return (
     <div className="space-y-3">
-      {/* Passkey Button - Temporarily disabled */}
-      <div className="w-full flex items-center gap-3 px-4 py-3 bg-gray-600 text-gray-400 font-medium rounded-xl opacity-50 cursor-not-allowed">
-        <span className="text-lg">🔐</span>
-        <div className="flex-1 text-left">
-          <div className="font-semibold">Passkey Authentication</div>
-          <div className="text-xs text-gray-500">Coming soon - API integration in progress</div>
-        </div>
-      </div>
-
-      {/* OAuth Providers */}
-      <div className="border-t border-gray-600 pt-3">
-        <div className="text-xs text-gray-400 text-center mb-3">Continue with</div>
-        
-        <div className="space-y-2">
+      <div className="text-xs text-gray-400 text-center mb-3">Sign in with zkLogin</div>
+      
+      <div className="space-y-2">
+        {googleWallet && (
           <button
-            onClick={() => handleLogin('google')}
-            disabled={isLoading}
-            className="w-full flex items-center gap-3 px-4 py-2.5 bg-gray-700 text-white font-medium rounded-lg hover:bg-gray-600 transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+            onClick={() => handleConnect(googleWallet, 'Google')}
+            className="w-full flex items-center gap-3 px-4 py-2.5 bg-gray-700 text-white font-medium rounded-lg hover:bg-gray-600 transition-colors duration-300"
           >
-            {loadingProvider === 'google' ? (
-              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-            ) : (
-              <span>🔍</span>
-            )}
+            <span>🔍</span>
             <div className="flex-1 text-left">
               <div>Google</div>
               <div className="text-xs text-gray-300">Sign in with Google account</div>
             </div>
           </button>
-          
-          <div className="w-full flex items-center gap-3 px-4 py-2.5 bg-gray-600 text-gray-400 font-medium rounded-lg opacity-50 cursor-not-allowed">
+        )}
+        
+        {facebookWallet && (
+          <button
+            onClick={() => handleConnect(facebookWallet, 'Facebook')}
+            className="w-full flex items-center gap-3 px-4 py-2.5 bg-gray-700 text-white font-medium rounded-lg hover:bg-gray-600 transition-colors duration-300"
+          >
             <span>📘</span>
             <div className="flex-1 text-left">
-              <div>Facebook OAuth</div>
-              <div className="text-xs text-gray-500">Setup required</div>
+              <div>Facebook</div>
+              <div className="text-xs text-gray-300">Sign in with Facebook account</div>
             </div>
-          </div>
-          
-          <div className="w-full flex items-center gap-3 px-4 py-2.5 bg-gray-600 text-gray-400 font-medium rounded-lg opacity-50 cursor-not-allowed">
+          </button>
+        )}
+        
+        {twitchWallet && (
+          <button
+            onClick={() => handleConnect(twitchWallet, 'Twitch')}
+            className="w-full flex items-center gap-3 px-4 py-2.5 bg-gray-700 text-white font-medium rounded-lg hover:bg-gray-600 transition-colors duration-300"
+          >
             <span>🎮</span>
             <div className="flex-1 text-left">
-              <div>Twitch OAuth</div>
-              <div className="text-xs text-gray-500">Setup required</div>
+              <div>Twitch</div>
+              <div className="text-xs text-gray-300">Sign in with Twitch account</div>
             </div>
+          </button>
+        )}
+        
+        {!googleWallet && !facebookWallet && !twitchWallet && (
+          <div className="text-center py-4 text-gray-400">
+            <p>No Enoki wallets available</p>
+            <p className="text-xs">Check your API configuration</p>
           </div>
-        </div>
+        )}
       </div>
 
       <button 
@@ -128,35 +133,6 @@ function ZkLoginButtons({ onClose }: { onClose: () => void }) {
 function NavbarContent() {
   const currentAccount = useCurrentAccount();
   const [showZkLogin, setShowZkLogin] = useState(false);
-  const [zkLoginSession, setZkLoginSession] = useState<any>(null);
-
-  // Check for zkLogin session on mount
-  useEffect(() => {
-    const checkSession = () => {
-      try {
-        const storedSession = localStorage.getItem('qedi_session');
-        if (storedSession) {
-          const session = JSON.parse(storedSession);
-          setZkLoginSession(session);
-          console.log('zkLogin session found:', session);
-        }
-      } catch (error) {
-        console.error('Error checking zkLogin session:', error);
-      }
-    };
-
-    checkSession();
-    
-    // Listen for storage changes (when session is updated)
-    window.addEventListener('storage', checkSession);
-    return () => window.removeEventListener('storage', checkSession);
-  }, []);
-
-  const handleLogout = () => {
-    localStorage.removeItem('qedi_session');
-    setZkLoginSession(null);
-    console.log('zkLogin session cleared');
-  };
 
   return (
     <nav className="absolute top-0 left-0 right-0 z-50 bg-gray-900/90 backdrop-blur-xl border-b border-gray-700/50">
@@ -188,50 +164,37 @@ function NavbarContent() {
                     </a>
                   </div>
 
-          {/* Right Section */}
-          <div className="flex items-center gap-4">
-            {currentAccount || zkLoginSession ? (
-              <div className="flex items-center gap-3">
-                <span className="hidden sm:block text-gray-300 text-sm">
-                  {currentAccount 
-                    ? `${currentAccount.address.slice(0, 6)}...${currentAccount.address.slice(-4)}`
-                    : zkLoginSession 
-                    ? `zkLogin: ${zkLoginSession.address.slice(0, 6)}...${zkLoginSession.address.slice(-4)}`
-                    : ''
-                  }
-                </span>
-                {zkLoginSession && (
-                  <button
-                    onClick={handleLogout}
-                    className="px-3 py-1 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700 transition-colors"
-                  >
-                    Logout
-                  </button>
-                )}
-                <ConnectButton />
-              </div>
-            ) : (
-              <>
-                <div className="relative">
-                  <button 
-                    onClick={() => setShowZkLogin(!showZkLogin)}
-                    className="hidden sm:block px-4 py-2 text-gray-300 hover:text-white font-medium transition-all duration-500 ease-out"
-                  >
-                    Sign In
-                  </button>
-                  
-                  {/* zkLogin Dropdown */}
-                  {showZkLogin && (
-                    <div className="absolute right-0 top-full mt-2 w-64 bg-gray-800/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-gray-600/30 p-4 z-50">
-                      <h3 className="text-white font-semibold mb-3">Sign in with</h3>
-                      <ZkLoginButtons onClose={() => setShowZkLogin(false)} />
+              {/* Right Section */}
+              <div className="flex items-center gap-4">
+                {currentAccount ? (
+                  <div className="flex items-center gap-3">
+                    <span className="hidden sm:block text-gray-300 text-sm">
+                      {`${currentAccount.address.slice(0, 6)}...${currentAccount.address.slice(-4)}`}
+                    </span>
+                    <ConnectButton />
+                  </div>
+                ) : (
+                  <>
+                    <div className="relative">
+                      <button 
+                        onClick={() => setShowZkLogin(!showZkLogin)}
+                        className="hidden sm:block px-4 py-2 text-gray-300 hover:text-white font-medium transition-all duration-500 ease-out"
+                      >
+                        Sign In
+                      </button>
+                      
+                      {/* zkLogin Dropdown */}
+                      {showZkLogin && (
+                        <div className="absolute right-0 top-full mt-2 w-64 bg-gray-800/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-gray-600/30 p-4 z-50">
+                          <h3 className="text-white font-semibold mb-3">Sign in with</h3>
+                          <EnokiLoginButtons onClose={() => setShowZkLogin(false)} />
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
-                <ConnectButton />
-              </>
-            )}
-          </div>
+                    <ConnectButton />
+                  </>
+                )}
+              </div>
         </div>
       </div>
     </nav>

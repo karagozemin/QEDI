@@ -1,7 +1,10 @@
+import { EnokiClient } from '@mysten/enoki';
 import { ENOKI_API_KEY, ZKLOGIN_REDIRECT_URI } from './constants';
 
-// Enoki configuration
-const ENOKI_API_URL = 'https://api.enoki.mystenlabs.com';
+// Initialize Enoki client
+const enokiClient = new EnokiClient({
+  apiKey: ENOKI_API_KEY,
+});
 
 
 // zkLogin providers configuration
@@ -76,7 +79,7 @@ export async function authenticateWithPasskey() {
 
   try {
     // Step 1: Get challenge from Enoki
-    const challengeResponse = await fetch(`${ENOKI_API_URL}/v1/zklogin/passkey/challenge`, {
+    const challengeResponse = await fetch(`https://api.enoki.mystenlabs.com/v1/zklogin/passkey/challenge`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -120,7 +123,7 @@ export async function authenticateWithPasskey() {
     }
 
     // Step 3: Send credential to Enoki for zkLogin
-    const response = await fetch(`${ENOKI_API_URL}/v1/zklogin/passkey/verify`, {
+    const response = await fetch(`https://api.enoki.mystenlabs.com/v1/zklogin/passkey/verify`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -256,9 +259,9 @@ async function processWithEnoki(jwt: string, originalCode: string) {
     
     for (const endpoint of endpoints) {
       try {
-        console.log(`Trying Enoki endpoint: ${ENOKI_API_URL}${endpoint}`);
+        console.log(`Trying Enoki endpoint: https://api.enoki.mystenlabs.com${endpoint}`);
         
-        const response = await fetch(`${ENOKI_API_URL}${endpoint}`, {
+        const response = await fetch(`https://api.enoki.mystenlabs.com${endpoint}`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -330,66 +333,22 @@ async function processWithEnoki(jwt: string, originalCode: string) {
   }
 }
 
-// Create sponsored transaction
-export async function createSponsoredTransaction(transactionBytes: Uint8Array) {
+// Execute sponsored transaction using Enoki SDK
+export async function executeSponsoredTransaction(transactionBytes: Uint8Array, senderAddress: string) {
   try {
-    console.log('Creating sponsored transaction with Enoki...');
+    console.log('Executing sponsored transaction with Enoki SDK...');
     
-    const response = await fetch(`${ENOKI_API_URL}/v1/sponsored-transaction`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${ENOKI_API_KEY}`,
-      },
-      body: JSON.stringify({
-        transactionKindBytes: Array.from(transactionBytes),
-        network: 'testnet'
-      }),
+    // Use the official Enoki SDK method
+    // Convert Uint8Array to base64 string as expected by Enoki
+    const base64TransactionBytes = btoa(String.fromCharCode(...transactionBytes));
+    
+    const result = await enokiClient.createSponsoredTransaction({
+      transactionKindBytes: base64TransactionBytes,
+      network: 'testnet',
+      sender: senderAddress
     });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Sponsored transaction API error: ${response.status} ${errorText}`);
-    }
-
-    const result = await response.json();
-    console.log('Sponsored transaction created:', result);
-    return result;
-  } catch (error) {
-    console.error('Failed to create sponsored transaction:', error);
-    throw error;
-  }
-}
-
-// Execute sponsored transaction
-export async function executeSponsoredTransaction(transactionBytes: Uint8Array) {
-  try {
-    console.log('Executing sponsored transaction...');
     
-    // Step 1: Create sponsored transaction
-    const sponsoredTx = await createSponsoredTransaction(transactionBytes);
-    
-    // Step 2: Execute the sponsored transaction
-    const response = await fetch(`${ENOKI_API_URL}/v1/execute-sponsored-transaction`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${ENOKI_API_KEY}`,
-      },
-      body: JSON.stringify({
-        sponsoredTransactionBytes: sponsoredTx.sponsoredTransactionBytes,
-        signature: sponsoredTx.signature,
-        network: 'testnet'
-      }),
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Execute sponsored transaction API error: ${response.status} ${errorText}`);
-    }
-
-    const result = await response.json();
-    console.log('Sponsored transaction executed:', result);
+    console.log('Sponsored transaction executed successfully:', result);
     return result;
   } catch (error) {
     console.error('Failed to execute sponsored transaction:', error);

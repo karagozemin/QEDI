@@ -161,15 +161,28 @@ export function recordLinkClickTransaction(profileId: string, linkIndex: number)
 }
 
 // Execute transaction with sponsorship
-export async function executeWithSponsorship(tx: Transaction) {
+export async function executeWithSponsorship(tx: Transaction, senderAddress?: string) {
   try {
     console.log('Preparing transaction for sponsorship...');
     
-    // Build the transaction bytes
-    const transactionBytes = await tx.build({ client: suiClient });
+    // Set sender address if provided (required for zkLogin users)
+    if (senderAddress) {
+      tx.setSender(senderAddress);
+      console.log('Transaction sender set to:', senderAddress);
+    }
     
-    // Execute with Enoki sponsorship
-    const result = await executeSponsoredTransaction(transactionBytes);
+    // For sponsored transactions, we don't need gas coins
+    // Set gas budget to 0 and let Enoki handle the gas payment
+    tx.setGasBudget(1000000); // Set a reasonable gas budget
+    
+    // Build the transaction bytes without requiring gas coins
+    const transactionBytes = await tx.build({ 
+      client: suiClient,
+      onlyTransactionKind: true // This skips gas coin resolution
+    });
+    
+        // Execute with Enoki sponsorship
+        const result = await executeSponsoredTransaction(transactionBytes, senderAddress!);
     
     return result;
   } catch (error) {
