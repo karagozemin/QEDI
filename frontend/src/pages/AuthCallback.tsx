@@ -21,15 +21,53 @@ export default function AuthCallback() {
           throw new Error('No authorization code received');
         }
 
-        // TODO: Complete zkLogin process when AuthContext is ready
+        // Complete zkLogin process
+        console.log('=== AUTH CALLBACK DEBUG ===');
         console.log('Auth code received:', authCode);
+        console.log('URL params:', new URLSearchParams(window.location.search));
+        console.log('Full URL:', window.location.href);
+        
+        const provider = localStorage.getItem('qedi_auth_provider');
+        console.log('Stored provider:', provider);
+        
+        if (!provider) {
+          throw new Error('No auth provider found');
+        }
+
+        console.log('Completing zkLogin for provider:', provider);
+        
+        // Import and use zkLogin completion
+        const { completeZkLogin } = await import('../lib/enoki');
+        const result = await completeZkLogin(authCode, provider as any);
+        
+        console.log('zkLogin completed:', result);
+        
+        // Store session
+        const session = {
+          address: result.address,
+          authMethod: provider,
+          zkProof: result.zkProof,
+          userInfo: result.userInfo,
+        };
+        
+        localStorage.setItem('qedi_session', JSON.stringify(session));
+        localStorage.removeItem('qedi_auth_provider');
+        
+        console.log('Session stored:', session);
+        
+        // Trigger storage event manually for same-window updates
+        window.dispatchEvent(new StorageEvent('storage', {
+          key: 'qedi_session',
+          newValue: JSON.stringify(session),
+          storageArea: localStorage
+        }));
         
         setStatus('success');
         
-        // Redirect to create profile page after successful login
+        // Redirect to home page after successful login
         setTimeout(() => {
-          navigate('/create');
-        }, 2000);
+          navigate('/');
+        }, 1500);
 
       } catch (err) {
         console.error('Auth callback error:', err);

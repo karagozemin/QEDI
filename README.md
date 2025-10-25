@@ -1,34 +1,45 @@
-# QEDI - Complete On-Chain LinkTree Platform
+# QEDI - On-Chain LinkTree Platform (zkLogin + Sponsored Gas dApp)
 
-> A fully-featured, decentralized LinkTree alternative built on Sui blockchain and hosted on Walrus Sites. This is a production-ready application with advanced features including zkLogin authentication, sponsored transactions, and comprehensive profile management.
+A comprehensive full-stack decentralized application for creating, managing, and sharing LinkTree profiles on the Sui blockchain. This platform features sponsored transactions powered by Enoki, providing gasless interactions for users with zkLogin authentication and Passkey support.
 
-## 🚀 Complete Feature Set
+## What's Inside
 
-### Core Features (Production Ready)
-- **zkLogin Authentication** - Seamless login with Google, Facebook, and Twitch
-- **Sponsored Transactions** - Zero gas fees for users via Enoki SDK
-- **On-Chain Profile Management** - Fully decentralized profile storage
-- **Walrus Decentralized Storage** - Avatar and asset storage on Walrus network
-- **SuiNS Domain Integration** - Custom .sui domains for profiles
-- **Dynamic Username Registry** - Human-readable profile URLs
+This platform consists of three main components:
 
-### Advanced Features (Full Implementation)
-- **Multi-Theme System** - 6 professionally designed themes (Classic, Dark, Gradient, Minimal, Cyberpunk, Nature)
-- **Drag & Drop Link Management** - Intuitive link reordering interface
-- **Real-time Profile Preview** - Live preview while editing
-- **QR Code Generation** - Automatic QR codes for profile sharing
-- **Social Media Integration** - Dedicated social link categories
-- **Mobile-Responsive Design** - Optimized for all devices
-- **Profile Analytics** - On-chain event tracking
-- **Bulk Operations** - Mass link management capabilities
+### Smart Contract (Sui Move)
+**Module:** `qedi_linktree::linktree`
+**Structs:**
+- `LinkTreeProfile`: On-chain profile with username, display_name, bio, avatar_url, links, theme
+- `Link`: Individual link with title, url, icon, click tracking
+- `UsernameRegistry`: Global registry for username → profile mapping
 
-### Technical Excellence
-- **Smart Contract Architecture** - Modular Move contracts with comprehensive testing
-- **Modern Frontend Stack** - React 18, TypeScript, Vite, TailwindCSS
-- **Professional UI Components** - shadcn/ui integration
-- **State Management** - Zustand for optimal performance
-- **Error Handling** - Comprehensive error boundaries and user feedback
-- **Loading States** - Skeleton loaders and optimistic updates
+**Functions:** 
+- `create_profile` — Create new LinkTree profile
+- `add_link` — Add social/web links to profile  
+- `update_profile` — Update profile information
+- `click_link` — Track link clicks on-chain
+
+### Frontend (React + TypeScript + Vite)
+Modern React application with comprehensive LinkTree functionality
+- **Enoki wallet integration** with zkLogin and Passkey support
+- **Real-time profile management** with link creation and editing
+- **Sponsored transactions** for gasless user experience
+- **Mobile-responsive design** with dark mode theme
+
+**Components:**
+- Profile creation form with multi-step wizard
+- Link management with drag-and-drop reordering
+- Social media integration with custom icons
+- Profile viewing with click tracking
+- Wallet connection with multiple auth methods
+
+### Key Features
+- **zkLogin Authentication** - Google, Facebook, Twitch, and Passkey support
+- **Sponsored Transactions** - Zero gas fees via Enoki SDK
+- **On-Chain Profile Storage** - Fully decentralized data
+- **Username Registry** - Human-readable profile URLs
+- **Link Click Tracking** - On-chain analytics
+- **Mobile-First Design** - Optimized for all devices
 
 ## 🏗 Architecture Overview
 
@@ -90,60 +101,158 @@ QEDI/
 - **@mysten/sui** - Sui blockchain interactions
 - **React Query** - Server state management
 
-## 🚀 Quick Start
+## Prerequisites
+- Node.js (v18+ recommended)
+- npm or yarn package manager
+- Enoki account with API keys (private + public)
+- zkLogin credentials for wallet authentication
+- Deployed LinkTree smart contract package ID
 
-### Prerequisites
-- Node.js 18+
-- Sui CLI
-- Walrus CLI
-- Git
+## Setup Instructions
 
-### Installation
+### 1. Frontend Setup
+Navigate to the frontend directory:
 ```bash
-# Clone repository
-git clone https://github.com/karagozemin/QEDI-.git
-cd QEDI
-
-# Install frontend dependencies
 cd frontend
+```
+
+Install dependencies:
+```bash
 npm install
-
-# Start development server
-npm run dev
 ```
 
-### Environment Setup
+Copy and configure environment variables:
 ```bash
-# Copy environment template
-cp frontend/env.local.example frontend/.env.local
-
-# Configure your API keys
-VITE_ENOKI_API_KEY=your_enoki_api_key
-VITE_GOOGLE_CLIENT_ID=your_google_client_id
+cp env.local.example .env.local
 ```
 
-### Smart Contract Deployment
+Edit `.env.local` file with your credentials:
+```env
+# Enoki API keys for sponsored transactions and zkLogin
+VITE_ENOKI_API_KEY=your_enoki_public_key_here
+VITE_ENOKI_PRIVATE_KEY=your_enoki_private_key_here
+
+# OAuth Provider Client IDs for zkLogin
+VITE_GOOGLE_CLIENT_ID=your_google_client_id_here
+VITE_FACEBOOK_CLIENT_ID=your_facebook_client_id_here
+VITE_TWITCH_CLIENT_ID=your_twitch_client_id_here
+
+# Deployed smart contract package IDs
+VITE_PACKAGE_ID=0xb2d7a68d8711ceac4a5ee6c7fbec61456083d6ff20858b6d38f86c9922d02673
+VITE_REGISTRY_ID=0x6b879e03c806815ea844dcebcd44447250c8b9cdc9c7553d3443dfb00cc2ce77
+
+# Walrus configuration for decentralized storage
+VITE_WALRUS_PUBLISHER_URL=https://publisher.walrus-testnet.walrus.space
+VITE_WALRUS_AGGREGATOR_URL=https://aggregator.walrus-testnet.walrus.space
+```
+
+### 2. Smart Contract Deployment (Optional)
+If you want to deploy your own contract:
 ```bash
-# Build and deploy contracts
 cd move
 sui move build
 sui client publish --gas-budget 100000000
 ```
 
-## 🌐 Live Demo
+## Running the Application
 
-- **Walrus Sites URL**: `https://[site-id].trwal.app/`
-- **Custom Domain**: `https://qedi.trwal.app/` (via SuiNS)
+### Start Development Server
+```bash
+cd frontend
+npm run dev
+```
+
+The frontend will start on http://localhost:5173 with full functionality:
+
+```
+2025-10-25 03:01:00 [info]: QEDI LinkTree Platform started {
+  "service": "qedi-frontend",
+  "port": "5173",
+  "environment": "development",
+  "network": "testnet",
+  "features": ["zkLogin", "sponsored-transactions", "passkey-auth"]
+}
+```
+
+## Core Functionality
+
+### Profile Management
+- **Create Profile**: Multi-step wizard with username, bio, avatar, and links
+- **Add Links**: Social media and custom links with click tracking
+- **Update Profile**: Real-time profile editing
+- **View Profile**: Public profile pages with analytics
+
+### Authentication Methods
+- **Wallet Connect**: Standard Sui wallet connection
+- **zkLogin**: Google, Facebook, Twitch OAuth integration
+- **Passkey**: Touch ID / Face ID biometric authentication (coming soon)
+
+### Transaction Types
+All transactions support both regular and sponsored (gasless) execution:
+
+**Profile Operations:**
+```javascript
+// Create new profile
+POST /api/create-profile
+{
+  "username": "myusername",
+  "displayName": "My Display Name", 
+  "bio": "My bio text",
+  "avatarUrl": "https://...",
+  "theme": "default"
+}
+
+// Add link to profile
+POST /api/add-link
+{
+  "profileId": "0x...",
+  "title": "My Website",
+  "url": "https://mysite.com",
+  "icon": "website"
+}
+```
+
+## Transaction Logging
+
+Example console output during sponsored transactions:
+
+```
+2025-10-25 03:25:15 [info]: Transaction CREATE_PROFILE initiated {
+  "service": "qedi-frontend",
+  "operation": "CREATE_PROFILE", 
+  "sender": "0xb532...1d63",
+  "status": "INITIATED",
+  "sponsored": true,
+  "details": {
+    "username": "myusername",
+    "displayName": "My Profile",
+    "linksCount": 3
+  }
+}
+
+2025-10-25 03:25:16 [info]: Sponsored transaction successful {
+  "service": "qedi-frontend",
+  "operation": "CREATE_PROFILE",
+  "transactionDigest": "0x1a2b3c...",
+  "gasUsed": 0,
+  "status": "SUCCESS"
+}
+```
+
+## Live Demo
+
+- **Development**: http://localhost:5173
 - **Testnet Explorer**: View contracts on Sui testnet explorer
+- **Package ID**: `0xb2d7a68d8711ceac4a5ee6c7fbec61456083d6ff20858b6d38f86c9922d02673`
 
-## 📊 Project Statistics
+## Project Statistics
 
-- **Smart Contracts**: 2 Move modules with comprehensive functionality
-- **Frontend Components**: 15+ reusable React components
-- **Pages**: 6 fully functional pages
-- **Themes**: 6 professionally designed themes
-- **Test Coverage**: Comprehensive Move contract testing
-- **Documentation**: Complete setup and API documentation
+- **Smart Contracts**: 1 comprehensive Move module
+- **Frontend Components**: 10+ reusable React components  
+- **Pages**: 4 fully functional pages (Home, Create, My Profiles, Profile View)
+- **Authentication Methods**: 4 (Wallet, Google, Facebook, Twitch, Passkey)
+- **Transaction Types**: Sponsored and regular transactions
+- **Mobile Responsive**: Optimized for all devices
 
 ## 🔧 Advanced Configuration
 

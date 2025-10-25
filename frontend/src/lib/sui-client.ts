@@ -1,6 +1,7 @@
 import { SuiClient } from '@mysten/sui/client';
 import { Transaction } from '@mysten/sui/transactions';
 import { PACKAGE_ID, REGISTRY_ID, NETWORK } from './constants';
+import { executeSponsoredTransaction } from './enoki';
 
 // Initialize Sui client
 export const suiClient = new SuiClient({
@@ -157,4 +158,22 @@ export function recordLinkClickTransaction(profileId: string, linkIndex: number)
   });
 
   return tx;
+}
+
+// Execute transaction with sponsorship
+export async function executeWithSponsorship(tx: Transaction) {
+  try {
+    console.log('Preparing transaction for sponsorship...');
+    
+    // Build the transaction bytes
+    const transactionBytes = await tx.build({ client: suiClient });
+    
+    // Execute with Enoki sponsorship
+    const result = await executeSponsoredTransaction(transactionBytes);
+    
+    return result;
+  } catch (error) {
+    console.error('Sponsored transaction failed:', error);
+    throw error;
+  }
 }

@@ -8,6 +8,7 @@ export const ADMIN_CAP_ID = '0xd560ca8e5f66bf6331e123c53313500ecafb752c40c77b3f5
 
 // Enoki Configuration
 export const ENOKI_API_KEY = import.meta.env.VITE_ENOKI_API_KEY || '';
+export const ENOKI_PRIVATE_KEY = import.meta.env.VITE_ENOKI_PRIVATE_KEY || '';
 export const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
 
 // Walrus Configuration
@@ -16,5 +17,17 @@ export const WALRUS_PUBLISHER = 'https://publisher.walrus-testnet.walrus.space';
 
 // App Configuration
 export const APP_NAME = 'QEDI';
-export const APP_URL = window.location.origin;
+export const APP_URL = import.meta.env.VITE_APP_URL || window.location.origin;
+
+// zkLogin Configuration
+export const ZKLOGIN_DEVNET_URL = import.meta.env.VITE_ZKLOGIN_DEVNET_URL || 'https://zklogin-api.testnet.sui.io';
+export const ZKLOGIN_REDIRECT_URI = import.meta.env.VITE_ZKLOGIN_REDIRECT_URI || 'http://localhost:5173/auth/callback';
+
+// Sui RPC Configuration
+export const SUI_RPC_URL = import.meta.env.VITE_SUI_RPC_URL || 'https://fullnode.testnet.sui.io:443';
+
+// Optional Configuration
+export const ENOKI_PROJECT_ID = import.meta.env.VITE_ENOKI_PROJECT_ID || '';
+export const IPFS_GATEWAY = import.meta.env.VITE_IPFS_GATEWAY || 'https://ipfs.io/ipfs/';
+export const NODE_ENV = import.meta.env.VITE_NODE_ENV || 'development';
 
