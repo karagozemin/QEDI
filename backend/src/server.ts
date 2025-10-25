@@ -216,6 +216,92 @@ app.post('/api/add-link', async (req, res) => {
   }
 });
 
+// Create Add Multiple Links Sponsored Transaction (Batch)
+app.post('/api/add-multiple-links', async (req, res) => {
+  try {
+    const { profileId, links, sender } = req.body;
+
+    console.log('Creating batch add links sponsored transaction:', {
+      profileId: `${profileId.slice(0, 8)}...${profileId.slice(-4)}`,
+      linksCount: links?.length || 0,
+      sender: `${sender.slice(0, 8)}...${sender.slice(-4)}`
+    });
+
+    // Validate inputs
+    if (!profileId || !links || !Array.isArray(links) || links.length === 0) {
+      return res.status(400).json({ 
+        error: 'Missing required fields: profileId, links (array)' 
+      });
+    }
+
+    if (!sender) {
+      return res.status(400).json({ 
+        error: 'Missing required field: sender' 
+      });
+    }
+
+    // Create PTB with multiple add_link calls
+    const tx = new Transaction();
+    
+    links.forEach((link: { title: string; url: string; icon: string }) => {
+      tx.moveCall({
+        target: `${process.env.PACKAGE_ID}::linktree::add_link`,
+        arguments: [
+          tx.object(profileId),
+          tx.pure.string(link.title),
+          tx.pure.string(link.url),
+          tx.pure.string(link.icon),
+          tx.object('0x6'), // Clock object ID
+        ],
+      });
+    });
+
+    // Set sender for zkLogin users
+    tx.setSender(sender);
+
+    // Build transaction bytes
+    const txBytes = await tx.build({
+      client: suiClient,
+      onlyTransactionKind: true,
+    });
+
+    // Create sponsored transaction
+    const sponsored = await enokiClient.createSponsoredTransaction({
+      transactionKindBytes: toBase64(txBytes),
+      network: (process.env.SUI_NETWORK as any) || 'testnet',
+      sender: sender,
+      allowedMoveCallTargets: [`${process.env.PACKAGE_ID}::linktree::add_link`],
+      allowedAddresses: [sender]
+    });
+
+    console.log('Batch add links sponsored transaction created:', {
+      digest: sponsored.digest,
+      bytesLength: sponsored.bytes.length,
+      linksCount: links.length
+    });
+
+    res.json({ 
+      digest: sponsored.digest,
+      bytes: sponsored.bytes 
+    });
+
+  } catch (error) {
+    console.error('Batch add links transaction failed:', error);
+    console.error('Error details:', {
+      message: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+      profileId: req.body.profileId,
+      linksCount: req.body.links?.length,
+      sender: req.body.sender
+    });
+    
+    res.status(500).json({ 
+      error: 'Failed to create batch add links sponsored transaction',
+      details: error instanceof Error ? error.message : String(error)
+    });
+  }
+});
+
 // Execute Sponsored Transaction
 app.post('/api/execute-transaction', async (req, res) => {
   try {

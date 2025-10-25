@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react';
-import { useCurrentAccount, useSignAndExecuteTransaction, useWallets } from '@mysten/dapp-kit';
+import { useCurrentAccount, useSignAndExecuteTransaction, useSignTransaction, useWallets } from '@mysten/dapp-kit';
 import { isEnokiWallet } from '@mysten/enoki';
 import { getUserProfiles, addMultipleLinksTransaction } from '../lib/sui-client';
+import { BACKEND_URL } from '../lib/constants';
 import DarkVeil from '../components/DarkVeil';
 
 export default function EditProfile() {
   const currentAccount = useCurrentAccount();
   const wallets = useWallets();
   const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction();
+  const { mutateAsync: signTransaction } = useSignTransaction();
   const [profiles, setProfiles] = useState<any[]>([]);
   const [selectedProfile, setSelectedProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -95,7 +97,76 @@ export default function EditProfile() {
 
       if (isEnokiConnected) {
         console.log('Using sponsored transaction for batch link addition...');
-        alert('Batch sponsored transactions not yet supported. Please use regular wallet.');
+        
+        try {
+          // Step 1: Create sponsored transaction via backend
+          console.log('📝 Step 1: Creating batch sponsored transaction via backend...');
+          const createResponse = await fetch(`${BACKEND_URL}/api/add-multiple-links`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              profileId: selectedProfile.data.objectId,
+              links: pendingLinks,
+              sender: currentAccount?.address,
+            }),
+          });
+
+          if (!createResponse.ok) {
+            const errorData = await createResponse.json();
+            throw new Error(`Backend error: ${errorData.error}`);
+          }
+
+          const { digest, bytes } = await createResponse.json();
+          console.log('✅ Batch sponsored transaction created:', { digest, bytesLength: bytes.length });
+
+          // Step 2: Sign the transaction bytes
+          console.log('✍️ Step 2: Signing transaction...');
+          const { signature } = await signTransaction({
+            transaction: bytes
+          });
+
+          if (!signature) {
+            throw new Error('Failed to get signature from user');
+          }
+
+          console.log('✅ Transaction signed successfully');
+
+          // Step 3: Execute sponsored transaction via backend
+          console.log('🚀 Step 3: Executing batch sponsored transaction via backend...');
+          const executeResponse = await fetch(`${BACKEND_URL}/api/execute-transaction`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              digest,
+              signature,
+            }),
+          });
+
+          if (!executeResponse.ok) {
+            const errorData = await executeResponse.json();
+            throw new Error(`Execution error: ${errorData.error}`);
+          }
+
+          const { result } = await executeResponse.json();
+          console.log('✅ Batch sponsored transaction executed successfully:', result);
+          
+          alert(`Successfully added ${pendingLinks.length} links with zkLogin (gas-free)! Transaction: ${result.result?.digest || digest}`);
+          
+          // Clear pending links
+          setPendingLinks([]);
+          // Reset form
+          setNewLink({ title: '', url: '', icon: 'link' });
+          // Reload profiles
+          loadProfiles();
+          
+        } catch (sponsorError) {
+          console.error('Batch sponsored transaction failed:', sponsorError);
+          alert(`Failed to add links: ${sponsorError instanceof Error ? sponsorError.message : 'Unknown error'}`);
+        }
       } else {
         // Regular wallet transaction - send PTB with all links
         console.log('Using regular wallet transaction...');
