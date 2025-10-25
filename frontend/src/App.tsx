@@ -141,7 +141,7 @@ function NavbarContent() {
           {/* Logo */}
           <a href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity duration-300">
             <img 
-              src="/logo.jpeg" 
+              src="/logo.png" 
               alt="QEDI Logo" 
               className="w-10 h-10 rounded-xl object-cover shadow-lg"
             />
