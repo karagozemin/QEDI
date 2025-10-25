@@ -1,0 +1,13 @@
+{
+  "name": "qedi-fullstack",
+  "version": "1.0.0",
+  "description": "QEDI - On-chain LinkTree with zkLogin and Sponsored Transactions",
+  "main": "api/health.js",
+  "dependencies": {
+    "@mysten/enoki": "^0.12.8",
+    "@mysten/sui": "^1.14.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
