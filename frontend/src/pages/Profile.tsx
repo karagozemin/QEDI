@@ -31,9 +31,9 @@ export default function Profile() {
       // Use the new getProfileByUsername function
       const profileResult = await getProfileByUsername(username);
       
-      if (!profileResult || !profileResult.data) {
+      if (!profileResult) {
         console.log('Profile not found for username:', username);
-        setError(`The profile "@${username}" doesn't exist or hasn't been created yet.`);
+        setError(`The profile "@${username}" doesn't exist or hasn't been created yet. (Registry bug - profile lookup temporarily disabled)`);
         return;
       }
 
