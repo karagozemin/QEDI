@@ -1,15 +1,13 @@
 import { useState, useEffect } from 'react';
-import { useCurrentAccount, useSignAndExecuteTransaction, useSignTransaction, useWallets } from '@mysten/dapp-kit';
+import { useCurrentAccount, useSignAndExecuteTransaction, useWallets } from '@mysten/dapp-kit';
 import { isEnokiWallet } from '@mysten/enoki';
 import { getUserProfiles, addMultipleLinksTransaction } from '../lib/sui-client';
-import { BACKEND_URL } from '../lib/constants';
 import DarkVeil from '../components/DarkVeil';
 
 export default function EditProfile() {
   const currentAccount = useCurrentAccount();
   const wallets = useWallets();
   const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction();
-  const { mutateAsync: signTransaction } = useSignTransaction();
   const [profiles, setProfiles] = useState<any[]>([]);
   const [selectedProfile, setSelectedProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
