@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useCurrentAccount, useSignAndExecuteTransaction, useSignTransaction, useWallets } from '@mysten/dapp-kit';
 import { isEnokiWallet } from '@mysten/enoki';
 import { createProfileTransaction, addLinkTransaction } from '../lib/sui-client';
+import { BACKEND_URL } from '../lib/constants';
 
 export default function Create() {
   const currentAccount = useCurrentAccount();
@@ -101,7 +102,7 @@ export default function Create() {
         try {
           // Step 1: Create sponsored transaction via backend
           console.log('📝 Step 1: Creating sponsored transaction via backend...');
-          const createResponse = await fetch('http://localhost:3001/api/create-profile', {
+          const createResponse = await fetch(`${BACKEND_URL}/api/create-profile`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -138,7 +139,7 @@ export default function Create() {
 
           // Step 3: Execute sponsored transaction via backend
           console.log('🚀 Step 3: Executing sponsored transaction via backend...');
-          const executeResponse = await fetch('http://localhost:3001/api/execute-transaction', {
+          const executeResponse = await fetch(`${BACKEND_URL}/api/execute-transaction`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',

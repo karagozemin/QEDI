@@ -18,6 +18,7 @@ export const WALRUS_PUBLISHER = 'https://publisher.walrus-testnet.walrus.space';
 // App Configuration
 export const APP_NAME = 'QEDI';
 export const APP_URL = import.meta.env.VITE_APP_URL || window.location.origin;
+export const BACKEND_URL = 'https://qedi.onrender.com';
 
 // zkLogin Configuration
 export const ZKLOGIN_DEVNET_URL = import.meta.env.VITE_ZKLOGIN_DEVNET_URL || 'https://zklogin-api.testnet.sui.io';
