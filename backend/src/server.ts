@@ -172,11 +172,18 @@ app.post('/api/add-link', async (req, res) => {
       tx.setSender(sender);
     }
 
+    // Build transaction bytes
+    const txBytes = await tx.build({
+      client: suiClient,
+      onlyTransactionKind: true,
+    });
+
     // Create sponsored transaction
     const sponsored = await enokiClient.createSponsoredTransaction({
-      transactionKindBytes: await tx.toJSON(),
+      transactionKindBytes: toBase64(txBytes),
       network: (process.env.SUI_NETWORK as any) || 'testnet',
       sender: sender,
+      allowedMoveCallTargets: [`${process.env.PACKAGE_ID}::linktree::add_link`],
       allowedAddresses: [sender]
     });
 
