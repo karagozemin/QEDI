@@ -52,11 +52,58 @@ export default function Create() {
       
       setAvatarFile(file);
       
-      // Create preview URL
+      // Compress image to fit within 16KB limit for on-chain storage
       const reader = new FileReader();
       reader.onload = (e) => {
-        setAvatarPreview(e.target?.result as string);
-        setFormData(prev => ({ ...prev, avatarUrl: e.target?.result as string }));
+        const img = new Image();
+        img.onload = () => {
+          // Create canvas for compression
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+          
+          // Set max dimensions (smaller = less data)
+          const MAX_WIDTH = 200;
+          const MAX_HEIGHT = 200;
+          let width = img.width;
+          let height = img.height;
+          
+          if (width > height) {
+            if (width > MAX_WIDTH) {
+              height = (height * MAX_WIDTH) / width;
+              width = MAX_WIDTH;
+            }
+          } else {
+            if (height > MAX_HEIGHT) {
+              width = (width * MAX_HEIGHT) / height;
+              height = MAX_HEIGHT;
+            }
+          }
+          
+          canvas.width = width;
+          canvas.height = height;
+          ctx?.drawImage(img, 0, 0, width, height);
+          
+          // Compress to JPEG with quality adjustment
+          let quality = 0.7;
+          let compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
+          
+          // Reduce quality if still too large (16KB = ~16384 bytes)
+          while (compressedDataUrl.length > 14000 && quality > 0.1) {
+            quality -= 0.1;
+            compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
+          }
+          
+          console.log('Compressed image size:', compressedDataUrl.length, 'bytes');
+          
+          if (compressedDataUrl.length > 16000) {
+            alert('Image is still too large after compression. Please use a smaller image or enter a URL instead.');
+            return;
+          }
+          
+          setAvatarPreview(compressedDataUrl);
+          setFormData(prev => ({ ...prev, avatarUrl: compressedDataUrl }));
+        };
+        img.src = e.target?.result as string;
       };
       reader.readAsDataURL(file);
     }
