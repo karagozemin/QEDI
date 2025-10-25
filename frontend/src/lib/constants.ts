@@ -3,7 +3,7 @@ export const NETWORK = (import.meta.env.VITE_NETWORK || 'testnet') as 'testnet' 
 
 // Smart Contract IDs (deployed to testnet - v2)
 export const PACKAGE_ID = import.meta.env.VITE_PACKAGE_ID || '0xb2d7a68d8711ceac4a5ee6c7fbec61456083d6ff20858b6d38f86c9922d02673';
-export const REGISTRY_ID = import.meta.env.VITE_REGISTRY_ID || '0x6b879e03c806815ea844dcebcd44447250c8b9cdc9c7553d3443dfb00cc2ce77';
+export const REGISTRY_ID = import.meta.env.VITE_REGISTRY_ID || '0xe37ab0f291b0b0b5e91fcfb3cefd655bb6666036fbef1062a96247dd7cd995a1';
 export const ADMIN_CAP_ID = '0xd560ca8e5f66bf6331e123c53313500ecafb752c40c77b3f510a96975b34adbe';
 
 // Enoki Configuration
