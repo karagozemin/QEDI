@@ -33,7 +33,7 @@ export default function Profile() {
       
       if (!profileResult) {
         console.log('Profile not found for username:', username);
-        setError(`The profile "@${username}" doesn't exist or hasn't been created yet. (Registry bug - profile lookup temporarily disabled)`);
+        setError(`The profile "@${username}" doesn't exist or hasn't been created yet.`);
         return;
       }
 

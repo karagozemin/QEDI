@@ -168,7 +168,7 @@ module qedi::linktree {
         };
 
         // Register username
-        table::add(&mut registry.usernames, profile.username, profile_id_copy);
+        table::add(&mut registry.usernames, username, profile_id_copy);
         registry.total_profiles = registry.total_profiles + 1;
 
         // Emit event

@@ -84,20 +84,86 @@ export function updateProfileTransaction(
   return tx;
 }
 
-// Get profile by username - WORKAROUND: Search through all profiles since Registry is broken
+// Get profile by username - Registry bug is now FIXED!
 export async function getProfileByUsername(username: string) {
   try {
-    console.log('=== PROFILE LOOKUP DEBUG (WORKAROUND) ===');
+    console.log('=== PROFILE LOOKUP DEBUG ===');
     console.log('Looking for username:', username);
-    console.log('Using workaround: searching all LinkTreeProfile objects');
+    console.log('Registry ID:', REGISTRY_ID);
 
-    // Since Registry is broken, we'll use a different approach
-    console.log('Registry is broken - username mapping not working');
-    console.log('Note: This is a temporary workaround due to Registry bug');
-    
-    // TODO: Implement proper profile search when Registry is fixed
-    // For now, profile lookup will not work until Registry bug is resolved
-    return null;
+    // Get registry object to check if it exists
+    const registryResult = await suiClient.getObject({
+      id: REGISTRY_ID,
+      options: {
+        showContent: true,
+        showType: true,
+      },
+    });
+
+    console.log('Registry result:', registryResult);
+
+    if (!registryResult.data?.content) {
+      console.log('Registry not found or has no content');
+      return null;
+    }
+
+    // Get dynamic fields from registry (username -> profile_id mappings)
+    console.log('Fetching dynamic fields from registry...');
+    const dynamicFields = await suiClient.getDynamicFields({
+      parentId: REGISTRY_ID,
+    });
+
+    console.log('Dynamic fields:', dynamicFields);
+
+    if (!dynamicFields.data || dynamicFields.data.length === 0) {
+      console.log('No dynamic fields found in registry');
+      return null;
+    }
+
+    // Look for the username in dynamic fields
+    let profileId = null;
+    for (const field of dynamicFields.data) {
+      console.log('Checking field:', field);
+      
+      // The field name should contain the username
+      if (field.name && field.name.value === username) {
+        // Get the dynamic field object to extract the profile ID
+        const fieldObject = await suiClient.getDynamicFieldObject({
+          parentId: REGISTRY_ID,
+          name: {
+            type: 'string',
+            value: username
+          }
+        });
+        
+        console.log('Field object for username:', fieldObject);
+        
+        if (fieldObject.data?.content && 'fields' in fieldObject.data.content) {
+          const fields = fieldObject.data.content.fields as any;
+          profileId = fields.value;
+          console.log('Found profile ID:', profileId);
+          break;
+        }
+      }
+    }
+
+    if (!profileId) {
+      console.log('Profile ID not found for username:', username);
+      return null;
+    }
+
+    // Fetch the actual profile object
+    console.log('Fetching profile object with ID:', profileId);
+    const profileResult = await suiClient.getObject({
+      id: profileId,
+      options: {
+        showContent: true,
+        showType: true,
+      },
+    });
+
+    console.log('Profile result:', profileResult);
+    return profileResult;
 
   } catch (error) {
     console.error('Error fetching profile for username:', username, error);
