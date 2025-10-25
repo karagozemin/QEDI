@@ -22,7 +22,7 @@ export const BACKEND_URL = 'https://qedi.onrender.com';
 
 // zkLogin Configuration
 export const ZKLOGIN_DEVNET_URL = import.meta.env.VITE_ZKLOGIN_DEVNET_URL || 'https://zklogin-api.testnet.sui.io';
-export const ZKLOGIN_REDIRECT_URI = import.meta.env.VITE_ZKLOGIN_REDIRECT_URI || 'http://localhost:5173/auth/callback';
+export const ZKLOGIN_REDIRECT_URI = import.meta.env.VITE_ZKLOGIN_REDIRECT_URI || 'https://qedi.trwal.app/auth/callback';
 
 // Sui RPC Configuration
 export const SUI_RPC_URL = import.meta.env.VITE_SUI_RPC_URL || 'https://fullnode.testnet.sui.io:443';

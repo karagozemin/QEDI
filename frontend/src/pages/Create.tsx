@@ -193,22 +193,43 @@ export default function Create() {
                 // Get the created profile ID from the transaction result
                 let profileId = null;
                 
-                // Try different ways to get the profile ID
-                if (result.effects && typeof result.effects === 'object') {
-                  const effects = result.effects as any;
-                  if (effects.created && effects.created.length > 0) {
-                    profileId = effects.created[0].reference?.objectId;
+                console.log('Full transaction result:', JSON.stringify(result, null, 2));
+                
+                // Try to get profile ID from objectChanges (most reliable)
+                if ('objectChanges' in result && Array.isArray(result.objectChanges)) {
+                  const createdObject = result.objectChanges.find((change: any) => 
+                    change.type === 'created' && 
+                    change.objectType && 
+                    change.objectType.includes('LinkTreeProfile')
+                  );
+                  if (createdObject) {
+                    profileId = createdObject.objectId;
+                    console.log('Found profile ID from objectChanges:', profileId);
                   }
                 }
                 
-                // Alternative: check if result has objectChanges property
-                if (!profileId && 'objectChanges' in result) {
-                  const objectChanges = (result as any).objectChanges;
-                  if (Array.isArray(objectChanges)) {
-                    const createdObject = objectChanges.find((change: any) => change.type === 'created');
-                    if (createdObject) {
-                      profileId = createdObject.objectId;
+                // Fallback: try effects.created
+                if (!profileId && result.effects && typeof result.effects === 'object') {
+                  const effects = result.effects as any;
+                  if (effects.created && effects.created.length > 0) {
+                    // Look for LinkTreeProfile object
+                    const profileObject = effects.created.find((obj: any) => 
+                      obj.reference?.objectId && 
+                      (!obj.objectType || obj.objectType.includes('LinkTreeProfile'))
+                    );
+                    if (profileObject) {
+                      profileId = profileObject.reference.objectId;
+                      console.log('Found profile ID from effects.created:', profileId);
                     }
+                  }
+                }
+                
+                // Last resort: take first created object
+                if (!profileId && result.effects && typeof result.effects === 'object') {
+                  const effects = result.effects as any;
+                  if (effects.created && effects.created.length > 0) {
+                    profileId = effects.created[0].reference?.objectId;
+                    console.log('Using first created object as profile ID:', profileId);
                   }
                 }
                 
