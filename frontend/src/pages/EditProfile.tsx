@@ -52,6 +52,8 @@ export default function EditProfile() {
     console.log('=== ADD LINK DEBUG ===');
     console.log('Current account:', currentAccount);
     console.log('Wallets:', wallets);
+    console.log('Selected profile:', selectedProfile);
+    console.log('New link data:', newLink);
 
     setIsAddingLink(true);
 
@@ -62,6 +64,9 @@ export default function EditProfile() {
         newLink.url,
         newLink.icon
       );
+      
+      console.log('Link transaction created:', linkTx);
+      console.log('Profile ID:', selectedProfile.data.objectId);
 
       // Check if using Enoki wallet
       const currentWallet = wallets.find(w => w.accounts.some(acc => acc.address === currentAccount?.address));
@@ -74,42 +79,61 @@ export default function EditProfile() {
         console.log('Using sponsored transaction for link addition...');
         
         try {
-          // Step 1: Get transaction bytes
-          console.log('Step 1: Getting transaction bytes...');
-          const txBytes = await linkTx.toJSON();
-          console.log('Transaction bytes:', txBytes);
-
-          // Step 2: Sign the transaction with zkLogin
-          console.log('Step 2: Signing transaction...');
-          const { signature } = await signTransaction({
-            transaction: txBytes,
-          });
-          
-          if (!signature) {
-            throw new Error('Failed to get signature from user');
-          }
-          
-          console.log('✅ Transaction signed successfully');
-
-          // Step 3: Send to backend for sponsorship and execution
-          console.log('Step 3: Sending to backend for sponsorship...');
-          const sponsorResponse = await fetch(`${BACKEND_URL}/api/execute-transaction`, {
+          // Step 1: Create sponsored transaction via backend
+          console.log('Step 1: Creating sponsored transaction via backend...');
+          const createResponse = await fetch(`${BACKEND_URL}/api/add-link`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-              transaction: txBytes,
+              profileId: selectedProfile.data.objectId,
+              title: newLink.title,
+              url: newLink.url,
+              icon: newLink.icon,
+              sender: currentAccount?.address,
+            }),
+          });
+
+          if (!createResponse.ok) {
+            const errorData = await createResponse.json();
+            throw new Error(`Backend error: ${errorData.error}`);
+          }
+
+          const { digest, bytes } = await createResponse.json();
+          console.log('✅ Sponsored transaction created:', { digest, bytesLength: bytes.length });
+
+          // Step 2: Sign the transaction bytes
+          console.log('Step 2: Signing transaction...');
+          const { signature } = await signTransaction({
+            transaction: bytes
+          });
+
+          if (!signature) {
+            throw new Error('Failed to get signature from user');
+          }
+
+          console.log('✅ Transaction signed successfully');
+
+          // Step 3: Execute sponsored transaction via backend
+          console.log('Step 3: Executing sponsored transaction via backend...');
+          const executeResponse = await fetch(`${BACKEND_URL}/api/execute-transaction`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              digest: digest,
               signature: signature,
             }),
           });
 
-          if (!sponsorResponse.ok) {
-            const errorData = await sponsorResponse.json();
-            throw new Error(errorData.error || 'Failed to sponsor transaction');
+          if (!executeResponse.ok) {
+            const errorData = await executeResponse.json();
+            throw new Error(errorData.error || 'Failed to execute transaction');
           }
 
-          const result = await sponsorResponse.json();
+          const result = await executeResponse.json();
           console.log('✅ Sponsored transaction executed successfully:', result);
           
           alert(`Link added successfully! Transaction: ${result.digest}`);
