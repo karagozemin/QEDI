@@ -1,18 +1,17 @@
-import { EnokiClient } from '@mysten/enoki';
-import { SuiClient, getFullnodeUrl } from '@mysten/sui/client';
-import { Transaction } from '@mysten/sui/transactions';
-import { toBase64 } from '@mysten/sui/utils';
+const { EnokiClient } = require('@mysten/enoki');
+const { SuiClient, getFullnodeUrl } = require('@mysten/sui/client');
+const { Transaction } = require('@mysten/sui/transactions');
+const { toBase64 } = require('@mysten/sui/utils');
 
-// Initialize clients
-const suiClient = new SuiClient({ 
-  url: getFullnodeUrl(process.env.SUI_NETWORK || 'testnet') 
-});
+module.exports = async function handler(req, res) {
+  // Initialize clients
+  const suiClient = new SuiClient({ 
+    url: getFullnodeUrl(process.env.SUI_NETWORK || 'testnet') 
+  });
 
-const enokiClient = new EnokiClient({
-  apiKey: process.env.ENOKI_PRIVATE_KEY
-});
-
-export default async function handler(req, res) {
+  const enokiClient = new EnokiClient({
+    apiKey: process.env.ENOKI_PRIVATE_KEY
+  });
   // Enable CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -94,4 +93,4 @@ export default async function handler(req, res) {
       details: error instanceof Error ? error.message : String(error)
     });
   }
-}
+};

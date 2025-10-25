@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "description": "QEDI Backend API for sponsored transactions",
   "main": "api/health.js",
-  "type": "module",
   "scripts": {
     "dev": "vercel dev",
     "build": "echo 'No build step required for Vercel functions'",
