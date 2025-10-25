@@ -43,7 +43,9 @@ app.get('/health', (req, res) => {
   res.json({ 
     status: 'OK', 
     message: 'QEDI Backend API',
-    network: process.env.SUI_NETWORK || 'testnet'
+    network: process.env.SUI_NETWORK || 'testnet',
+    packageId: process.env.PACKAGE_ID,
+    registryId: process.env.REGISTRY_ID
   });
 });
 
