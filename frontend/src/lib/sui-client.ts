@@ -59,6 +59,30 @@ export function addLinkTransaction(
   return tx;
 }
 
+// Add multiple links in a single PTB transaction
+export function addMultipleLinksTransaction(
+  profileId: string,
+  links: Array<{ title: string; url: string; icon: string }>
+) {
+  const tx = new Transaction();
+  
+  // Add each link in the same transaction block
+  links.forEach(link => {
+    tx.moveCall({
+      target: `${PACKAGE_ID}::linktree::add_link`,
+      arguments: [
+        tx.object(profileId),
+        tx.pure.string(link.title),
+        tx.pure.string(link.url),
+        tx.pure.string(link.icon),
+        tx.object('0x6'), // Clock object ID
+      ],
+    });
+  });
+
+  return tx;
+}
+
 // Update profile transaction
 export function updateProfileTransaction(
   profileId: string,

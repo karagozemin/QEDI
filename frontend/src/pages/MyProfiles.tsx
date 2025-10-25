@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useCurrentAccount } from '@mysten/dapp-kit';
 import { getUserProfiles } from '../lib/sui-client';
 import SocialIcon from '../components/SocialIcon';
+import DarkVeil from '../components/DarkVeil';
 
 export default function MyProfiles() {
   const currentAccount = useCurrentAccount();
@@ -88,7 +89,11 @@ export default function MyProfiles() {
   if (!currentAccount) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-blue-900 pt-24">
-        <div className="container mx-auto px-4 py-20">
+        {/* DarkVeil Background - Fixed to cover entire page */}
+        <div className="fixed inset-0 opacity-30 pointer-events-none z-0">
+          <DarkVeil speed={0.3} />
+        </div>
+        <div className="container mx-auto px-4 py-20 relative z-10">
           <div className="max-w-3xl mx-auto text-center">
             <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-3xl flex items-center justify-center mx-auto mb-8">
               <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -106,7 +111,11 @@ export default function MyProfiles() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-blue-900 pt-24">
-        <div className="container mx-auto px-4 py-20">
+        {/* DarkVeil Background - Fixed to cover entire page */}
+        <div className="fixed inset-0 opacity-30 pointer-events-none z-0">
+          <DarkVeil speed={0.3} />
+        </div>
+        <div className="container mx-auto px-4 py-20 relative z-10">
           <div className="text-center">
             <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
             <h2 className="text-2xl font-bold text-white mb-4">Loading Your Profiles</h2>
@@ -120,7 +129,11 @@ export default function MyProfiles() {
   if (profiles.length === 0) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-blue-900 pt-24">
-        <div className="container mx-auto px-4 py-20">
+        {/* DarkVeil Background - Fixed to cover entire page */}
+        <div className="fixed inset-0 opacity-30 pointer-events-none z-0">
+          <DarkVeil speed={0.3} />
+        </div>
+        <div className="container mx-auto px-4 py-20 relative z-10">
           <div className="max-w-3xl mx-auto text-center">
             <div className="w-24 h-24 bg-gradient-to-br from-gray-700 to-gray-600 rounded-3xl flex items-center justify-center mx-auto mb-8">
               <svg className="w-12 h-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -143,7 +156,11 @@ export default function MyProfiles() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-blue-900 pt-24">
-      <div className="container mx-auto px-4 py-20">
+      {/* DarkVeil Background - Fixed to cover entire page */}
+      <div className="fixed inset-0 opacity-30 pointer-events-none z-0">
+        <DarkVeil speed={0.3} />
+      </div>
+      <div className="container mx-auto px-4 py-20 relative z-10">
         <div className="max-w-4xl mx-auto">
           {/* Header */}
           <div className="text-center mb-12">

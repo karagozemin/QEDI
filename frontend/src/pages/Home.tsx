@@ -1,6 +1,13 @@
+import DarkVeil from '../components/DarkVeil';
+
 export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-blue-900">
+      {/* DarkVeil Background - Fixed to cover entire page */}
+      <div className="fixed inset-0 opacity-30 pointer-events-none z-0">
+        <DarkVeil speed={0.3} />
+      </div>
+      
       {/* Hero Section */}
       <div className="relative overflow-hidden">
         {/* Subtle background pattern */}
@@ -10,14 +17,8 @@ export default function Home() {
         
         <div className="container mx-auto px-4 py-32">
           <div className="text-center max-w-5xl mx-auto">
-            {/* Status Badge */}
-            <div className="inline-flex items-center gap-3 px-6 py-3 rounded-full bg-gradient-to-r from-blue-500/10 to-indigo-500/10 border border-blue-400/20 backdrop-blur-sm text-blue-300 text-sm font-medium mb-12 shadow-lg">
-              <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse shadow-lg shadow-blue-400/50"></div>
-              Built on Sui Network • Testnet Ready
-            </div>
-
             {/* Main Heading */}
-            <h1 className="text-6xl md:text-8xl font-bold mb-12 text-white tracking-tight leading-tight">
+            <h1 className="text-6xl md:text-8xl font-bold mb-12 text-white tracking-tight leading-tight mt-16">
               Your Links,
               <br />
               On-Chain Forever
@@ -31,20 +32,23 @@ export default function Home() {
 
             {/* CTA Section */}
             <div className="flex flex-col sm:flex-row items-center justify-center gap-6 mb-24">
-              <button className="group px-10 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-2xl shadow-xl shadow-blue-500/25 hover:shadow-2xl hover:shadow-blue-500/40 transform hover:-translate-y-1 transition-all duration-1000 ease-out hover:scale-102">
+              <a
+                href="/create"
+                className="group px-10 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-2xl shadow-xl shadow-blue-500/25 hover:shadow-2xl hover:shadow-blue-500/40 transform hover:-translate-y-1 transition-all duration-1000 ease-out hover:scale-102"
+              >
                 <span className="flex items-center gap-3">
-                  Smart Contract in Development
+                  Create Your Profile
                   <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-1000 ease-out" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                   </svg>
                 </span>
-              </button>
+              </a>
               
               <a
-                href="/explore"
+                href="/my-profiles"
                 className="px-10 py-4 bg-gray-800/50 backdrop-blur-sm text-gray-200 font-semibold rounded-2xl border border-gray-600/50 hover:border-blue-400/50 hover:bg-gray-700/50 hover:text-white transform hover:-translate-y-1 transition-all duration-1000 ease-out hover:scale-102 shadow-lg"
               >
-                Explore Profiles
+                My Profiles
               </a>
             </div>
 
@@ -68,7 +72,7 @@ export default function Home() {
       </div>
 
       {/* Features Section */}
-      <div className="py-32 bg-gradient-to-b from-gray-800 to-gray-900">
+      <div className="py-32 bg-gradient-to-b from-gray-800/60 to-gray-900/60">
         <div className="container mx-auto px-4">
           <div className="text-center mb-20">
             <h2 className="text-5xl font-bold text-white mb-6">
@@ -129,8 +133,8 @@ export default function Home() {
       </div>
 
       {/* CTA Section */}
-      <div className="py-32 bg-gradient-to-b from-gray-900 via-blue-800 to-blue-600 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-600/90 to-purple-600/90"></div>
+      <div className="py-32 bg-gradient-to-b from-gray-900/20 via-blue-800/10 to-blue-600/10 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-blue-600/5 to-purple-600/5"></div>
         <div className="container mx-auto px-4 text-center relative z-10">
           <h2 className="text-5xl font-bold text-white mb-8">
             Ready to Build Your On-Chain Identity?

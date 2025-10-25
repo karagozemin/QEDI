@@ -148,8 +148,8 @@ function NavbarContent() {
             <span className="text-2xl font-bold text-white">QEDI</span>
           </div>
 
-          {/* Navigation */}
-                  <div className="hidden md:flex items-center gap-8 ml-12">
+          {/* Navigation - Centered */}
+                  <div className="hidden md:flex items-center gap-8 absolute left-1/2 transform -translate-x-1/2">
                     <a href="/" className="text-gray-300 hover:text-white font-medium transition-all duration-500 ease-out hover:scale-105 relative group">
                       Home
                       <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-400 to-indigo-400 group-hover:w-full transition-all duration-500 ease-out"></span>

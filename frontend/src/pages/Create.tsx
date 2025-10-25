@@ -3,6 +3,7 @@ import { useCurrentAccount, useSignAndExecuteTransaction, useSignTransaction, us
 import { isEnokiWallet } from '@mysten/enoki';
 import { createProfileTransaction, addLinkTransaction } from '../lib/sui-client';
 import { BACKEND_URL } from '../lib/constants';
+import DarkVeil from '../components/DarkVeil';
 
 export default function Create() {
   const currentAccount = useCurrentAccount();
@@ -403,7 +404,11 @@ export default function Create() {
   if (!currentAccount) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-blue-900 pt-24">
-        <div className="container mx-auto px-4 py-20">
+        {/* DarkVeil Background - Fixed to cover entire page */}
+        <div className="fixed inset-0 opacity-30 pointer-events-none z-0">
+          <DarkVeil speed={0.3} />
+        </div>
+        <div className="container mx-auto px-4 py-20 relative z-10">
           <div className="max-w-3xl mx-auto text-center">
             <div className="bg-gradient-to-br from-gray-800/50 to-gray-700/30 backdrop-blur-xl rounded-3xl shadow-2xl border border-gray-600/30 p-16">
               <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-3xl flex items-center justify-center mx-auto mb-8">
@@ -432,7 +437,11 @@ export default function Create() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-blue-900 pt-24">
-      <div className="container mx-auto px-4 py-20">
+      {/* DarkVeil Background - Fixed to cover entire page */}
+      <div className="fixed inset-0 opacity-30 pointer-events-none z-0">
+        <DarkVeil speed={0.3} />
+      </div>
+      <div className="container mx-auto px-4 py-20 relative z-10">
         <div className="max-w-4xl mx-auto">
           {/* Header */}
           <div className="text-center mb-12">
