@@ -1,10 +1,10 @@
 // Sui Network
 export const NETWORK = (import.meta.env.VITE_NETWORK || 'testnet') as 'testnet' | 'mainnet';
 
-// Smart Contract IDs (deployed to testnet)
-export const PACKAGE_ID = import.meta.env.VITE_PACKAGE_ID || '0x11b5d881867910ab05483669ee6ca32536b36ff5a35c8568d806a25447fe2888';
-export const REGISTRY_ID = import.meta.env.VITE_REGISTRY_ID || '0xe37ab0f291b0b0b5e91fcfb3cefd655bb6666036fbef1062a96247dd7cd995a1';
-export const ADMIN_CAP_ID = '0xd81ef476851b5b2473423a3752b845116ce5fedf3ce60df168cd8450cc485948';
+// Smart Contract IDs (deployed to testnet - v2)
+export const PACKAGE_ID = import.meta.env.VITE_PACKAGE_ID || '0xb2d7a68d8711ceac4a5ee6c7fbec61456083d6ff20858b6d38f86c9922d02673';
+export const REGISTRY_ID = import.meta.env.VITE_REGISTRY_ID || '0x6b879e03c806815ea844dcebcd44447250c8b9cdc9c7553d3443dfb00cc2ce77';
+export const ADMIN_CAP_ID = '0xd560ca8e5f66bf6331e123c53313500ecafb752c40c77b3f510a96975b34adbe';
 
 // Enoki Configuration
 export const ENOKI_API_KEY = import.meta.env.VITE_ENOKI_API_KEY || '';

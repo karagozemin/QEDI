@@ -9,6 +9,9 @@ import '@mysten/dapp-kit/dist/index.css';
 import Home from './pages/Home';
 import Explore from './pages/Explore';
 import Create from './pages/Create';
+import MyProfiles from './pages/MyProfiles';
+import EditProfile from './pages/EditProfile';
+import Profile from './pages/Profile';
 import AuthCallback from './pages/AuthCallback';
 
 const queryClient = new QueryClient();
@@ -49,20 +52,24 @@ function NavbarContent() {
           </div>
 
           {/* Navigation */}
-          <div className="hidden md:flex items-center gap-8 ml-12">
-            <a href="/" className="text-gray-300 hover:text-white font-medium transition-all duration-500 ease-out hover:scale-105 relative group">
-              Home
-              <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-400 to-indigo-400 group-hover:w-full transition-all duration-500 ease-out"></span>
-            </a>
-            <a href="/explore" className="text-gray-300 hover:text-white font-medium transition-all duration-500 ease-out hover:scale-105 relative group">
-              Explore
-              <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-400 to-indigo-400 group-hover:w-full transition-all duration-500 ease-out"></span>
-            </a>
-            <a href="/create" className="text-gray-300 hover:text-white font-medium transition-all duration-500 ease-out hover:scale-105 relative group">
-              Create
-              <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-400 to-indigo-400 group-hover:w-full transition-all duration-500 ease-out"></span>
-            </a>
-          </div>
+              <div className="hidden md:flex items-center gap-8 ml-12">
+                <a href="/" className="text-gray-300 hover:text-white font-medium transition-all duration-500 ease-out hover:scale-105 relative group">
+                  Home
+                  <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-400 to-indigo-400 group-hover:w-full transition-all duration-500 ease-out"></span>
+                </a>
+                <a href="/explore" className="text-gray-300 hover:text-white font-medium transition-all duration-500 ease-out hover:scale-105 relative group">
+                  Explore
+                  <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-400 to-indigo-400 group-hover:w-full transition-all duration-500 ease-out"></span>
+                </a>
+                <a href="/create" className="text-gray-300 hover:text-white font-medium transition-all duration-500 ease-out hover:scale-105 relative group">
+                  Create
+                  <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-400 to-indigo-400 group-hover:w-full transition-all duration-500 ease-out"></span>
+                </a>
+                <a href="/my-profiles" className="text-gray-300 hover:text-white font-medium transition-all duration-500 ease-out hover:scale-105 relative group">
+                  My Profiles
+                  <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-400 to-indigo-400 group-hover:w-full transition-all duration-500 ease-out"></span>
+                </a>
+              </div>
 
           {/* Right Section */}
           <div className="flex items-center gap-4">
@@ -114,6 +121,9 @@ function App() {
                 <Route path="/" element={<Home />} />
                 <Route path="/explore" element={<Explore />} />
                 <Route path="/create" element={<Create />} />
+                <Route path="/my-profiles" element={<MyProfiles />} />
+                <Route path="/edit-profile" element={<EditProfile />} />
+                <Route path="/profile/:username" element={<Profile />} />
                 <Route path="/auth/callback" element={<AuthCallback />} />
               </Routes>
             </div>

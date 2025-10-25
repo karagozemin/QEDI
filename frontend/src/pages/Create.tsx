@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useCurrentAccount, useSignAndExecuteTransaction } from '@mysten/dapp-kit';
-import { createProfileTransaction } from '../lib/sui-client';
+import { createProfileTransaction, addLinkTransaction } from '../lib/sui-client';
 
 export default function Create() {
   const currentAccount = useCurrentAccount();
@@ -57,7 +57,8 @@ export default function Create() {
     setIsCreating(true);
 
     try {
-      const tx = createProfileTransaction(
+      // Step 1: Create the profile
+      const profileTx = createProfileTransaction(
         formData.username,
         formData.displayName,
         formData.bio,
@@ -67,13 +68,86 @@ export default function Create() {
 
       signAndExecuteTransaction(
         {
-          transaction: tx,
+          transaction: profileTx,
         },
         {
-          onSuccess: (result) => {
+          onSuccess: async (result) => {
             console.log('Profile created successfully:', result);
-            alert(`Profile created successfully! Transaction: ${result.digest}`);
-            // Reset form or redirect
+            
+            // Step 2: Add links if any exist
+            if (formData.links.length > 0) {
+              try {
+                // Get the created profile ID from the transaction result
+                let profileId = null;
+                
+                // Try different ways to get the profile ID
+                if (result.effects && typeof result.effects === 'object') {
+                  const effects = result.effects as any;
+                  if (effects.created && effects.created.length > 0) {
+                    profileId = effects.created[0].reference?.objectId;
+                  }
+                }
+                
+                // Alternative: check if result has objectChanges property
+                if (!profileId && 'objectChanges' in result) {
+                  const objectChanges = (result as any).objectChanges;
+                  if (Array.isArray(objectChanges)) {
+                    const createdObject = objectChanges.find((change: any) => change.type === 'created');
+                    if (createdObject) {
+                      profileId = createdObject.objectId;
+                    }
+                  }
+                }
+                
+                console.log('Extracted profile ID:', profileId);
+                
+                if (profileId) {
+                  console.log('Adding links to profile:', profileId);
+                  
+                  // Add each link sequentially
+                  for (let i = 0; i < formData.links.length; i++) {
+                    const link = formData.links[i];
+                    if (link.title && link.url) {
+                      console.log(`Adding link ${i + 1}:`, link);
+                      
+                      const linkTx = addLinkTransaction(
+                        profileId,
+                        link.title,
+                        link.url,
+                        link.icon
+                      );
+
+                      await new Promise((resolve, reject) => {
+                        signAndExecuteTransaction(
+                          { transaction: linkTx },
+                          {
+                            onSuccess: (linkResult) => {
+                              console.log(`Link ${i + 1} added successfully:`, linkResult);
+                              resolve(linkResult);
+                            },
+                            onError: (linkError) => {
+                              console.error(`Failed to add link ${i + 1}:`, linkError);
+                              reject(linkError);
+                            },
+                          }
+                        );
+                      });
+                    }
+                  }
+                  
+                  alert(`Profile created successfully with ${formData.links.length} links! Transaction: ${result.digest}`);
+                } else {
+                  alert('Profile created but could not add links. Please add them manually.');
+                }
+              } catch (linkError) {
+                console.error('Error adding links:', linkError);
+                alert('Profile created but some links failed to add. Please add them manually.');
+              }
+            } else {
+              alert(`Profile created successfully! Transaction: ${result.digest}`);
+            }
+
+            // Reset form
             setFormData({
               username: '',
               displayName: '',

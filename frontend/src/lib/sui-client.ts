@@ -22,12 +22,13 @@ export function createProfileTransaction(
   tx.moveCall({
     target: `${PACKAGE_ID}::linktree::create_profile`,
     arguments: [
+      tx.object(REGISTRY_ID),
       tx.pure.string(username),
       tx.pure.string(displayName),
       tx.pure.string(bio),
       tx.pure.string(avatarUrl),
       tx.pure.string(theme),
-      tx.object(REGISTRY_ID),
+      tx.object('0x6'), // Clock object ID
     ],
   });
 
@@ -50,6 +51,7 @@ export function addLinkTransaction(
       tx.pure.string(title),
       tx.pure.string(url),
       tx.pure.string(icon),
+      tx.object('0x6'), // Clock object ID
     ],
   });
 
@@ -74,6 +76,7 @@ export function updateProfileTransaction(
       tx.pure.string(bio),
       tx.pure.string(avatarUrl),
       tx.pure.string(theme),
+      tx.object('0x6'), // Clock object ID
     ],
   });
 
@@ -93,10 +96,10 @@ export async function getProfileByUsername(username: string) {
 
     // This is a simplified version - in practice, you'd need to query the registry
     // and then fetch the actual profile object
-    console.log('Registry object:', result);
+    console.log('Registry object for username:', username, result);
     return null; // TODO: Implement proper profile fetching
   } catch (error) {
-    console.error('Error fetching profile:', error);
+    console.error('Error fetching profile for username:', username, error);
     return null;
   }
 }
@@ -145,10 +148,11 @@ export function recordLinkClickTransaction(profileId: string, linkIndex: number)
   const tx = new Transaction();
   
   tx.moveCall({
-    target: `${PACKAGE_ID}::linktree::record_click`,
+    target: `${PACKAGE_ID}::linktree::click_link`,
     arguments: [
       tx.object(profileId),
       tx.pure.u64(linkIndex),
+      tx.object('0x6'), // Clock object ID
     ],
   });
 

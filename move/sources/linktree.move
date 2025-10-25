@@ -139,7 +139,7 @@ module qedi::linktree {
         theme: String,
         clock: &Clock,
         ctx: &mut TxContext
-    ): LinkTreeProfile {
+    ) {
         // Validate username
         assert!(is_valid_username(&username), EInvalidUsername);
         assert!(!table::contains(&registry.usernames, username), EUsernameAlreadyTaken);
@@ -179,7 +179,8 @@ module qedi::linktree {
             created_at: current_time,
         });
 
-        profile
+        // Transfer profile to the creator
+        transfer::transfer(profile, tx_context::sender(ctx));
     }
 
     /// Update profile information
