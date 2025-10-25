@@ -1,10 +1,14 @@
 import { useState, useEffect } from 'react';
-import { useCurrentAccount, useSignAndExecuteTransaction } from '@mysten/dapp-kit';
+import { useCurrentAccount, useSignAndExecuteTransaction, useSignTransaction, useWallets } from '@mysten/dapp-kit';
+import { isEnokiWallet } from '@mysten/enoki';
 import { getUserProfiles, addLinkTransaction } from '../lib/sui-client';
+import { BACKEND_URL } from '../lib/constants';
 
 export default function EditProfile() {
   const currentAccount = useCurrentAccount();
+  const wallets = useWallets();
   const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction();
+  const { mutateAsync: signTransaction } = useSignTransaction();
   const [profiles, setProfiles] = useState<any[]>([]);
   const [selectedProfile, setSelectedProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -45,35 +49,105 @@ export default function EditProfile() {
       return;
     }
 
+    console.log('=== ADD LINK DEBUG ===');
+    console.log('Current account:', currentAccount);
+    console.log('Wallets:', wallets);
+
     setIsAddingLink(true);
 
     try {
-      const tx = addLinkTransaction(
+      const linkTx = addLinkTransaction(
         selectedProfile.data.objectId,
         newLink.title,
         newLink.url,
         newLink.icon
       );
 
-      signAndExecuteTransaction(
-        {
-          transaction: tx,
-        },
-        {
-          onSuccess: (result) => {
-            console.log('Link added successfully:', result);
-            alert(`Link added successfully! Transaction: ${result.digest}`);
-            // Reset form
-            setNewLink({ title: '', url: '', icon: 'link' });
-            // Reload profiles
-            loadProfiles();
-          },
-          onError: (error) => {
-            console.error('Link addition failed:', error);
-            alert(`Link addition failed: ${error.message}`);
-          },
+      // Check if using Enoki wallet
+      const currentWallet = wallets.find(w => w.accounts.some(acc => acc.address === currentAccount?.address));
+      const isEnokiConnected = currentWallet ? isEnokiWallet(currentWallet) : false;
+      
+      console.log('Current wallet:', currentWallet);
+      console.log('Is Enoki connected:', isEnokiConnected);
+
+      if (isEnokiConnected) {
+        console.log('Using sponsored transaction for link addition...');
+        
+        try {
+          // Step 1: Get transaction bytes
+          console.log('Step 1: Getting transaction bytes...');
+          const txBytes = await linkTx.toJSON();
+          console.log('Transaction bytes:', txBytes);
+
+          // Step 2: Sign the transaction with zkLogin
+          console.log('Step 2: Signing transaction...');
+          const { signature } = await signTransaction({
+            transaction: txBytes,
+          });
+          
+          if (!signature) {
+            throw new Error('Failed to get signature from user');
+          }
+          
+          console.log('✅ Transaction signed successfully');
+
+          // Step 3: Send to backend for sponsorship and execution
+          console.log('Step 3: Sending to backend for sponsorship...');
+          const sponsorResponse = await fetch(`${BACKEND_URL}/api/execute-transaction`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              transaction: txBytes,
+              signature: signature,
+            }),
+          });
+
+          if (!sponsorResponse.ok) {
+            const errorData = await sponsorResponse.json();
+            throw new Error(errorData.error || 'Failed to sponsor transaction');
+          }
+
+          const result = await sponsorResponse.json();
+          console.log('✅ Sponsored transaction executed successfully:', result);
+          
+          alert(`Link added successfully! Transaction: ${result.digest}`);
+          
+          // Reset form
+          setNewLink({ title: '', url: '', icon: 'link' });
+          
+          // Reload profiles
+          loadProfiles();
+          
+        } catch (sponsorError) {
+          console.error('Sponsored transaction failed:', sponsorError);
+          alert(`Link addition failed: ${sponsorError instanceof Error ? sponsorError.message : 'Unknown error'}`);
         }
-      );
+      } else {
+        // Regular wallet transaction
+        console.log('Using regular wallet transaction...');
+        
+        signAndExecuteTransaction(
+          {
+            transaction: linkTx,
+          },
+          {
+            onSuccess: (result) => {
+              console.log('Link added successfully:', result);
+              alert(`Link added successfully! Transaction: ${result.digest}`);
+              // Reset form
+              setNewLink({ title: '', url: '', icon: 'link' });
+              // Reload profiles
+              loadProfiles();
+            },
+            onError: (error) => {
+              console.error('Link addition failed:', error);
+              alert(`Link addition failed: ${error.message}`);
+            },
+          }
+        );
+      }
     } catch (error) {
       console.error('Transaction preparation failed:', error);
       alert('Failed to prepare transaction');
