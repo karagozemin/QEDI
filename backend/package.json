@@ -1,13 +1,8 @@
 {
   "name": "qedi-backend",
   "version": "1.0.0",
-  "description": "QEDI Backend API for sponsored transactions",
+  "description": "QEDI Backend API for sponsored transactions - Vercel Serverless Functions",
   "main": "api/health.js",
-  "scripts": {
-    "dev": "vercel dev",
-    "build": "echo 'No build step required for Vercel functions'",
-    "start": "echo 'Use vercel dev for local development'"
-  },
   "dependencies": {
     "@mysten/enoki": "^0.12.8",
     "@mysten/sui": "^1.14.2"
