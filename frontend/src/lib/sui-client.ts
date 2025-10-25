@@ -136,13 +136,13 @@ export async function getProfileByUsername(username: string) {
       
       // The field name should contain the username
       if (field.name && field.name.value === username) {
-        // Get the dynamic field object to extract the profile ID
-        const fieldObject = await suiClient.getDynamicFieldObject({
-          parentId: usernamesTableId,
-          name: {
-            type: 'string',
-            value: username
-          }
+        // Get the field object directly using its object ID
+        console.log('Found matching field, getting object:', field.objectId);
+        const fieldObject = await suiClient.getObject({
+          id: field.objectId,
+          options: {
+            showContent: true,
+          },
         });
         
         console.log('Field object for username:', fieldObject);
