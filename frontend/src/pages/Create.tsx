@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useCurrentAccount, useSignAndExecuteTransaction, useWallets } from '@mysten/dapp-kit';
+import { useCurrentAccount, useSignAndExecuteTransaction, useSignTransaction, useWallets } from '@mysten/dapp-kit';
 import { isEnokiWallet } from '@mysten/enoki';
 import { createProfileTransaction, addLinkTransaction } from '../lib/sui-client';
 
@@ -7,6 +7,7 @@ export default function Create() {
   const currentAccount = useCurrentAccount();
   const wallets = useWallets();
   const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction();
+  const { mutateAsync: signTransaction } = useSignTransaction();
   const [step, setStep] = useState(1);
   const [isCreating, setIsCreating] = useState(false);
   const [formData, setFormData] = useState({
@@ -95,33 +96,67 @@ export default function Create() {
 
       // Check if we need to use sponsored transactions for Enoki wallet
       if (isEnokiConnected) {
-        console.log('Using sponsored transaction for Enoki wallet...');
+        console.log('Using sponsored transaction via backend for Enoki wallet...');
         
         try {
-          // Import sponsored transaction function
-          const { executeSponsoredTransaction } = await import('../lib/enoki');
-          
-          // Build transaction bytes
-          const { suiClient } = await import('../lib/sui-client');
-          const transactionBytes = await profileTx.build({ 
-            client: suiClient,
-            onlyTransactionKind: true 
+          // Step 1: Create sponsored transaction via backend
+          console.log('📝 Step 1: Creating sponsored transaction via backend...');
+          const createResponse = await fetch('http://localhost:3001/api/create-profile', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              sender: currentAccount.address,
+              username: formData.username,
+              displayName: formData.displayName,
+              bio: formData.bio,
+              avatarUrl: formData.avatarUrl,
+              theme: formData.theme,
+            }),
           });
-          
-          // Get zkLogin session address for sponsored transaction
-          const zkLoginSession = localStorage.getItem('qedi_session');
-          let senderAddress = currentAccount.address;
-          
-          if (zkLoginSession) {
-            const session = JSON.parse(zkLoginSession);
-            console.log('zkLogin session address:', session.address);
-            senderAddress = session.address; // Use zkLogin address for sponsored tx
+
+          if (!createResponse.ok) {
+            const errorData = await createResponse.json();
+            throw new Error(`Backend error: ${errorData.error}`);
           }
+
+          const { digest, bytes } = await createResponse.json();
+          console.log('✅ Sponsored transaction created:', { digest, bytesLength: bytes.length });
+
+          // Step 2: Sign the transaction bytes
+          console.log('✍️ Step 2: Signing transaction...');
+          const { signature } = await signTransaction({
+            transaction: bytes
+          });
+
+          if (!signature) {
+            throw new Error('Failed to get signature from user');
+          }
+
+          console.log('✅ Transaction signed successfully');
+
+          // Step 3: Execute sponsored transaction via backend
+          console.log('🚀 Step 3: Executing sponsored transaction via backend...');
+          const executeResponse = await fetch('http://localhost:3001/api/execute-transaction', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              digest,
+              signature,
+            }),
+          });
+
+          if (!executeResponse.ok) {
+            const errorData = await executeResponse.json();
+            throw new Error(`Execution error: ${errorData.error}`);
+          }
+
+          const { result } = await executeResponse.json();
+          console.log('✅ Sponsored transaction executed successfully:', result);
           
-          console.log('Creating profile for address:', senderAddress);
-          const result = await executeSponsoredTransaction(transactionBytes, senderAddress);
-          
-          console.log('Sponsored transaction successful:', result);
           alert('Profile created successfully with sponsored transaction! No gas fees paid.');
           
           // Reset form
@@ -137,7 +172,7 @@ export default function Create() {
           
         } catch (sponsorError) {
           console.error('Sponsored transaction failed:', sponsorError);
-          alert('Sponsored transaction failed. zkLogin wallets cannot use regular transactions.');
+          alert(`Sponsored transaction failed: ${sponsorError instanceof Error ? sponsorError.message : 'Unknown error'}`);
         }
       } else {
         console.log('Using regular wallet transaction...');

@@ -1,7 +1,7 @@
 import { SuiClient } from '@mysten/sui/client';
 import { Transaction } from '@mysten/sui/transactions';
 import { PACKAGE_ID, REGISTRY_ID, NETWORK } from './constants';
-import { executeSponsoredTransaction } from './enoki';
+// import { executeSponsoredTransaction } from './enoki'; // Temporarily disabled
 
 // Initialize Sui client
 export const suiClient = new SuiClient({
@@ -176,15 +176,8 @@ export async function executeWithSponsorship(tx: Transaction, senderAddress?: st
     tx.setGasBudget(1000000); // Set a reasonable gas budget
     
     // Build the transaction bytes without requiring gas coins
-    const transactionBytes = await tx.build({ 
-      client: suiClient,
-      onlyTransactionKind: true // This skips gas coin resolution
-    });
-    
-        // Execute with Enoki sponsorship
-        const result = await executeSponsoredTransaction(transactionBytes, senderAddress!);
-    
-    return result;
+    // TODO: Fix this to use new 3-step workflow
+    throw new Error('executeWithSponsorship temporarily disabled - use Create.tsx direct flow');
   } catch (error) {
     console.error('Sponsored transaction failed:', error);
     throw error;

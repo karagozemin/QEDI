@@ -333,16 +333,20 @@ async function processWithEnoki(jwt: string, originalCode: string) {
   }
 }
 
-// Execute sponsored transaction using Enoki SDK
-export async function executeSponsoredTransaction(transactionBytes: Uint8Array, senderAddress: string) {
+// Execute sponsored transaction using Enoki SDK with 3-step workflow
+export async function executeSponsoredTransaction(
+  transactionBytes: Uint8Array, 
+  senderAddress: string,
+  signTransactionFn: (params: { transaction: string }) => Promise<{ signature: string }>
+) {
   try {
-    console.log('Executing sponsored transaction with Enoki SDK...');
+    console.log('🚀 Starting sponsored transaction workflow...');
     
-    // Use the official Enoki SDK method with private client
     // Convert Uint8Array to base64 string as expected by Enoki
     const base64TransactionBytes = btoa(String.fromCharCode(...transactionBytes));
     
-    // Step 1: Create sponsored transaction (prepare and sign)
+    // Step 1: Create sponsored transaction (prepare)
+    console.log('📝 Step 1: Creating sponsored transaction...');
     const sponsoredTx = await enokiClient.createSponsoredTransaction({
       transactionKindBytes: base64TransactionBytes,
       network: 'testnet',
@@ -350,10 +354,27 @@ export async function executeSponsoredTransaction(transactionBytes: Uint8Array, 
       allowedAddresses: [senderAddress]
     });
     
-    console.log('Sponsored transaction created:', sponsoredTx);
+    console.log('✅ Sponsored transaction created:', {
+      digest: sponsoredTx.digest,
+      bytesLength: sponsoredTx.bytes.length
+    });
     
-    // Step 2: Broadcast the sponsored transaction using Sui RPC
-    console.log('Broadcasting sponsored transaction to Sui blockchain...');
+    // Step 2: Sign the transaction bytes
+    console.log('✍️ Step 2: Signing transaction...');
+    const { signature } = await signTransactionFn({
+      transaction: sponsoredTx.bytes
+    });
+    
+    if (!signature) {
+      throw new Error('Failed to get signature from user');
+    }
+    
+    console.log('✅ Transaction signed successfully');
+    
+    // Step 3: Broadcast the signed sponsored transaction directly to Sui RPC
+    console.log('🚀 Step 3: Broadcasting signed sponsored transaction...');
+    console.log('Debug - digest:', sponsoredTx.digest);
+    console.log('Debug - signature length:', signature.length);
     
     try {
       const broadcastResponse = await fetch('https://fullnode.testnet.sui.io:443', {
@@ -365,7 +386,7 @@ export async function executeSponsoredTransaction(transactionBytes: Uint8Array, 
           method: 'sui_executeTransactionBlock',
           params: {
             tx_bytes: sponsoredTx.bytes,
-            signatures: [], // Enoki should have embedded signatures in bytes
+            signatures: [signature], // Use the user signature from Step 2
             options: {
               showInput: true,
               showEffects: true,
@@ -377,25 +398,29 @@ export async function executeSponsoredTransaction(transactionBytes: Uint8Array, 
         })
       });
       
-      const result = await broadcastResponse.json();
-      console.log('Broadcast result:', result);
+      const broadcastResult = await broadcastResponse.json();
+      console.log('Broadcast result:', broadcastResult);
       
-      if (result.result?.digest) {
-        console.log('✅ Transaction successfully broadcast!');
+      if (broadcastResult.result?.digest) {
+        console.log('✅ Sponsored transaction successfully broadcast!');
+        console.log('🔍 Transaction digest:', broadcastResult.result.digest);
+        console.log('🌐 Sui Explorer:', `https://suiexplorer.com/txblock/${broadcastResult.result.digest}?network=testnet`);
+        console.log('🔗 SuiScan:', `https://suiscan.xyz/testnet/tx/${broadcastResult.result.digest}`);
+        
         return {
-          digest: result.result.digest,
-          bytes: sponsoredTx.bytes
+          digest: broadcastResult.result.digest,
+          effects: broadcastResult.result.effects
         };
       } else {
-        console.error('❌ Broadcast failed:', result.error);
-        throw new Error(`Broadcast failed: ${result.error?.message || 'Unknown error'}`);
+        console.error('❌ Broadcast failed:', broadcastResult.error);
+        throw new Error(`Broadcast failed: ${broadcastResult.error?.message || 'Unknown error'}`);
       }
     } catch (broadcastError) {
-      console.error('❌ Failed to broadcast:', broadcastError);
+      console.error('❌ Failed to broadcast sponsored transaction:', broadcastError);
       throw broadcastError;
     }
   } catch (error) {
-    console.error('Failed to execute sponsored transaction:', error);
+    console.error('❌ Sponsored transaction failed:', error);
     throw error;
   }
 }
