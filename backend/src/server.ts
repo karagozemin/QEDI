@@ -202,11 +202,11 @@ app.post('/api/add-link', async (req, res) => {
     console.error('Error details:', {
       message: error instanceof Error ? error.message : String(error),
       stack: error instanceof Error ? error.stack : undefined,
-      profileId,
-      title,
-      url,
-      icon,
-      sender
+      profileId: req.body.profileId,
+      title: req.body.title,
+      url: req.body.url,
+      icon: req.body.icon,
+      sender: req.body.sender
     });
     
     res.status(500).json({ 
