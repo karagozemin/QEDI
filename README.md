@@ -1,4 +1,4 @@
-# QEDI - On-Chain LinkTree Platform (zkLogin + Sponsored Gas dApp)
+#QEDI - On-Chain LinkTree Platform (zkLogin + Sponsored Gas dApp)
 
 A comprehensive full-stack decentralized application for creating, managing, and sharing LinkTree profiles on the Sui blockchain. This platform features sponsored transactions powered by Enoki, providing gasless interactions for users with zkLogin authentication and Passkey support.
 
