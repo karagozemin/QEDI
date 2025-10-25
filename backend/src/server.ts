@@ -190,6 +190,15 @@ app.post('/api/add-link', async (req, res) => {
 
   } catch (error) {
     console.error('Add link transaction failed:', error);
+    console.error('Error details:', {
+      message: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+      profileId,
+      title,
+      url,
+      icon,
+      sender
+    });
     
     res.status(500).json({ 
       error: 'Failed to create add link sponsored transaction',
