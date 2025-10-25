@@ -87,7 +87,12 @@ export function updateProfileTransaction(
 // Get profile by username
 export async function getProfileByUsername(username: string) {
   try {
-    const result = await suiClient.getObject({
+    console.log('=== PROFILE LOOKUP DEBUG ===');
+    console.log('Looking for username:', username);
+    console.log('Registry ID:', REGISTRY_ID);
+
+    // 1. Get registry object to check if it exists
+    const registryResult = await suiClient.getObject({
       id: REGISTRY_ID,
       options: {
         showContent: true,
@@ -95,10 +100,71 @@ export async function getProfileByUsername(username: string) {
       },
     });
 
-    // This is a simplified version - in practice, you'd need to query the registry
-    // and then fetch the actual profile object
-    console.log('Registry object for username:', username, result);
-    return null; // TODO: Implement proper profile fetching
+    console.log('Registry result:', registryResult);
+
+    if (!registryResult.data?.content) {
+      console.log('Registry not found or has no content');
+      return null;
+    }
+
+    // 2. Get dynamic fields from registry (username -> profile_id mappings)
+    console.log('Fetching dynamic fields from registry...');
+    const dynamicFields = await suiClient.getDynamicFields({
+      parentId: REGISTRY_ID,
+    });
+
+    console.log('Dynamic fields:', dynamicFields);
+
+    if (!dynamicFields.data || dynamicFields.data.length === 0) {
+      console.log('No dynamic fields found in registry');
+      return null;
+    }
+
+    // 3. Look for the username in dynamic fields
+    let profileId = null;
+    for (const field of dynamicFields.data) {
+      console.log('Checking field:', field);
+      
+      // The field name should contain the username
+      if (field.name && field.name.value === username) {
+        // Get the dynamic field object to extract the profile ID
+        const fieldObject = await suiClient.getDynamicFieldObject({
+          parentId: REGISTRY_ID,
+          name: {
+            type: 'string',
+            value: username
+          }
+        });
+        
+        console.log('Field object for username:', fieldObject);
+        
+        if (fieldObject.data?.content && 'fields' in fieldObject.data.content) {
+          const fields = fieldObject.data.content.fields as any;
+          profileId = fields.value;
+          console.log('Found profile ID:', profileId);
+          break;
+        }
+      }
+    }
+
+    if (!profileId) {
+      console.log('Profile ID not found for username:', username);
+      return null;
+    }
+
+    // 4. Fetch the actual profile object
+    console.log('Fetching profile object with ID:', profileId);
+    const profileResult = await suiClient.getObject({
+      id: profileId,
+      options: {
+        showContent: true,
+        showType: true,
+      },
+    });
+
+    console.log('Profile result:', profileResult);
+    return profileResult;
+
   } catch (error) {
     console.error('Error fetching profile for username:', username, error);
     return null;

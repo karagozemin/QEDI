@@ -1,15 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useSignAndExecuteTransaction } from '@mysten/dapp-kit';
-import { suiClient } from '../lib/sui-client';
-import { REGISTRY_ID } from '../lib/constants';
-import { recordLinkClickTransaction } from '../lib/sui-client';
+import { getProfileByUsername, recordLinkClickTransaction } from '../lib/sui-client';
 import SocialIcon from '../components/SocialIcon';
 
 export default function Profile() {
   const { username } = useParams<{ username: string }>();
   const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction();
-  const [profile] = useState<any>(null);
+  const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
 
@@ -24,28 +22,27 @@ export default function Profile() {
     
     setLoading(true);
     setError('');
+    setProfile(null);
     
     try {
-      // Get registry to find profile ID by username
-      const registryResult = await suiClient.getObject({
-        id: REGISTRY_ID,
-        options: {
-          showContent: true,
-          showType: true,
-        },
-      });
-
-      console.log('Registry result:', registryResult);
+      console.log('=== PROFILE PAGE DEBUG ===');
+      console.log('Loading profile for username:', username);
       
-      // For now, we'll search through all LinkTreeProfile objects
-      // In a real implementation, we'd query the registry's dynamic fields
-      // Note: This is a workaround - we should query the registry instead
-      console.log('Profile lookup by username not fully implemented yet');
-      setError(`Profile lookup by username (@${username}) is not fully implemented yet. Please use direct profile URLs.`);
-      return;
+      // Use the new getProfileByUsername function
+      const profileResult = await getProfileByUsername(username);
+      
+      if (!profileResult || !profileResult.data) {
+        console.log('Profile not found for username:', username);
+        setError(`The profile "@${username}" doesn't exist or hasn't been created yet.`);
+        return;
+      }
+
+      console.log('Profile loaded successfully:', profileResult);
+      setProfile(profileResult);
+      
     } catch (err) {
       console.error('Error loading profile:', err);
-      setError('Failed to load profile');
+      setError('Failed to load profile. Please try again.');
     } finally {
       setLoading(false);
     }
