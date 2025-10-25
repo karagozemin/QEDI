@@ -72,6 +72,19 @@ export default function Create() {
 
     try {
       // Create the profile transaction
+      console.log('=== PROFILE DATA DEBUG ===');
+      console.log('Username:', formData.username, 'Length:', formData.username.length);
+      console.log('Display Name:', formData.displayName);
+      console.log('Bio:', formData.bio);
+      console.log('Avatar URL:', formData.avatarUrl);
+      console.log('Theme:', formData.theme);
+      
+      // Validate username before creating transaction
+      if (formData.username.length < 3 || formData.username.length > 20) {
+        alert(`Username must be between 3-20 characters. Current: ${formData.username.length} characters`);
+        return;
+      }
+      
       const profileTx = createProfileTransaction(
         formData.username,
         formData.displayName,
@@ -95,8 +108,18 @@ export default function Create() {
             onlyTransactionKind: true 
           });
           
-          // Execute with sponsorship
-          const result = await executeSponsoredTransaction(transactionBytes, currentAccount.address);
+          // Get zkLogin session address for sponsored transaction
+          const zkLoginSession = localStorage.getItem('qedi_session');
+          let senderAddress = currentAccount.address;
+          
+          if (zkLoginSession) {
+            const session = JSON.parse(zkLoginSession);
+            console.log('zkLogin session address:', session.address);
+            senderAddress = session.address; // Use zkLogin address for sponsored tx
+          }
+          
+          console.log('Creating profile for address:', senderAddress);
+          const result = await executeSponsoredTransaction(transactionBytes, senderAddress);
           
           console.log('Sponsored transaction successful:', result);
           alert('Profile created successfully with sponsored transaction! No gas fees paid.');

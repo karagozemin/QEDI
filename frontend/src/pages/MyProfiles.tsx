@@ -19,9 +19,43 @@ export default function MyProfiles() {
     
     setLoading(true);
     try {
-      const userProfiles = await getUserProfiles(currentAccount.address);
-      console.log('User profiles:', userProfiles);
-      setProfiles(userProfiles);
+      console.log('=== MY PROFILES DEBUG ===');
+      console.log('Current account:', currentAccount);
+      console.log('Current account address:', currentAccount.address);
+      
+      // Check both current account and zkLogin session addresses
+      const addresses = [currentAccount.address];
+      
+      const zkLoginSession = localStorage.getItem('qedi_session');
+      if (zkLoginSession) {
+        const session = JSON.parse(zkLoginSession);
+        console.log('zkLogin session found:', session);
+        console.log('zkLogin address:', session.address);
+        
+        // Add zkLogin address if different
+        if (session.address !== currentAccount.address) {
+          addresses.push(session.address);
+        }
+      }
+      
+      console.log('Checking profiles for addresses:', addresses);
+      
+      // Get profiles from all addresses
+      let allProfiles: any[] = [];
+      for (const address of addresses) {
+        console.log('Fetching profiles for address:', address);
+        const addressProfiles = await getUserProfiles(address);
+        console.log(`Profiles for ${address}:`, addressProfiles);
+        console.log('Raw profile data:', JSON.stringify(addressProfiles, null, 2));
+        allProfiles = [...allProfiles, ...addressProfiles];
+      }
+      
+      // Also check transaction digest manually
+      console.log('Recent transaction digest: VWAsLReDgtG4EBd2K7mEnHx18qF5aNEHTMperpds7go');
+      console.log('Check on Sui Explorer: https://suiexplorer.com/txblock/VWAsLReDgtG4EBd2K7mEnHx18qF5aNEHTMperpds7go?network=testnet');
+      
+      console.log('All profiles found:', allProfiles);
+      setProfiles(allProfiles);
     } catch (error) {
       console.error('Error loading profiles:', error);
     } finally {
