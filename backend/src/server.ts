@@ -22,7 +22,12 @@ const enokiClient = new EnokiClient({
 
 // Middleware
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://localhost:3000'],
+  origin: [
+    'http://localhost:5173', 
+    'http://localhost:3000',
+    'https://qedi.trwal.app',
+    'https://qedi.sui'
+  ],
   credentials: true
 }));
 app.use(express.json());
