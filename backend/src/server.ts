@@ -139,6 +139,65 @@ app.post('/api/create-profile', async (req, res) => {
   }
 });
 
+// Create Add Link Sponsored Transaction
+app.post('/api/add-link', async (req, res) => {
+  try {
+    const { profileId, title, url, icon, sender } = req.body;
+
+    console.log('Creating add link sponsored transaction:', {
+      profileId: `${profileId.slice(0, 8)}...${profileId.slice(-4)}`,
+      title,
+      url,
+      icon,
+      sender: `${sender.slice(0, 8)}...${sender.slice(-4)}`
+    });
+
+    // Create the add link transaction
+    const tx = new Transaction();
+    tx.moveCall({
+      target: `${process.env.PACKAGE_ID}::linktree::add_link`,
+      arguments: [
+        tx.object(profileId),
+        tx.pure.string(title),
+        tx.pure.string(url),
+        tx.pure.string(icon),
+        tx.object('0x6'), // Clock object ID
+      ],
+    });
+
+    // Set sender for zkLogin users
+    if (sender) {
+      tx.setSender(sender);
+    }
+
+    // Create sponsored transaction
+    const sponsored = await enokiClient.createSponsoredTransaction({
+      transactionKindBytes: await tx.toJSON(),
+      network: (process.env.SUI_NETWORK as any) || 'testnet',
+      sender: sender,
+      allowedAddresses: [sender]
+    });
+
+    console.log('Add link sponsored transaction created:', {
+      digest: sponsored.digest,
+      bytesLength: sponsored.bytes.length
+    });
+
+    res.json({ 
+      digest: sponsored.digest,
+      bytes: sponsored.bytes 
+    });
+
+  } catch (error) {
+    console.error('Add link transaction failed:', error);
+    
+    res.status(500).json({ 
+      error: 'Failed to create add link sponsored transaction',
+      details: error instanceof Error ? error.message : String(error)
+    });
+  }
+});
+
 // Execute Sponsored Transaction
 app.post('/api/execute-transaction', async (req, res) => {
   try {
