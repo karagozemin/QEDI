@@ -143,7 +143,7 @@ function NavbarContent() {
             <img 
               src="/logo.png" 
               alt="QEDI Logo" 
-              className="w-10 h-10 rounded-xl object-cover shadow-lg"
+              className="w-14 h-14 rounded-xl object-cover shadow-lg"
             />
             <span className="text-2xl font-bold text-white">QEDI</span>
           </a>
