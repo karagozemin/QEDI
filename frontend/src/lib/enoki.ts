@@ -1,9 +1,9 @@
 import { EnokiClient } from '@mysten/enoki';
-import { ENOKI_API_KEY, ZKLOGIN_REDIRECT_URI } from './constants';
+import { ENOKI_API_KEY, ENOKI_PRIVATE_KEY, ZKLOGIN_REDIRECT_URI } from './constants';
 
-// Initialize Enoki client
+// Initialize Enoki client for sponsored transactions (private key)
 const enokiClient = new EnokiClient({
-  apiKey: ENOKI_API_KEY,
+  apiKey: ENOKI_PRIVATE_KEY,
 });
 
 
@@ -338,7 +338,7 @@ export async function executeSponsoredTransaction(transactionBytes: Uint8Array, 
   try {
     console.log('Executing sponsored transaction with Enoki SDK...');
     
-    // Use the official Enoki SDK method
+    // Use the official Enoki SDK method with private client
     // Convert Uint8Array to base64 string as expected by Enoki
     const base64TransactionBytes = btoa(String.fromCharCode(...transactionBytes));
     

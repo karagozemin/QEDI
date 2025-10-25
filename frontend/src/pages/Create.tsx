@@ -62,6 +62,12 @@ export default function Create() {
       return;
     }
 
+    console.log('=== WALLET DEBUG ===');
+    console.log('Current account:', currentAccount);
+    console.log('Connected wallet:', connectedWallet);
+    console.log('Is Enoki wallet:', isEnokiConnected);
+    console.log('Wallet type:', connectedWallet?.name);
+
     setIsCreating(true);
 
     try {
@@ -74,12 +80,51 @@ export default function Create() {
         formData.theme
       );
 
-      // Use Enoki wallet (automatic sponsored transactions) or regular wallet
-      signAndExecuteTransaction(
-        {
-          transaction: profileTx,
-        },
-        {
+      // Check if we need to use sponsored transactions for Enoki wallet
+      if (isEnokiConnected) {
+        console.log('Using sponsored transaction for Enoki wallet...');
+        
+        try {
+          // Import sponsored transaction function
+          const { executeSponsoredTransaction } = await import('../lib/enoki');
+          
+          // Build transaction bytes
+          const { suiClient } = await import('../lib/sui-client');
+          const transactionBytes = await profileTx.build({ 
+            client: suiClient,
+            onlyTransactionKind: true 
+          });
+          
+          // Execute with sponsorship
+          const result = await executeSponsoredTransaction(transactionBytes, currentAccount.address);
+          
+          console.log('Sponsored transaction successful:', result);
+          alert('Profile created successfully with sponsored transaction! No gas fees paid.');
+          
+          // Reset form
+          setFormData({
+            username: '',
+            displayName: '',
+            bio: '',
+            avatarUrl: '',
+            theme: 'default',
+            links: []
+          });
+          setStep(1);
+          
+        } catch (sponsorError) {
+          console.error('Sponsored transaction failed:', sponsorError);
+          alert('Sponsored transaction failed. zkLogin wallets cannot use regular transactions.');
+        }
+      } else {
+        console.log('Using regular wallet transaction...');
+        
+        // Use regular wallet transaction
+        signAndExecuteTransaction(
+          {
+            transaction: profileTx,
+          },
+          {
           onSuccess: async (result) => {
             console.log('Profile created successfully:', result);
             
@@ -180,7 +225,8 @@ export default function Create() {
             alert(`Profile creation failed: ${error.message}`);
           },
         }
-      );
+        );
+      }
     } catch (error) {
       console.error('Transaction preparation failed:', error);
       alert('Failed to prepare transaction');
