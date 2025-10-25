@@ -107,10 +107,19 @@ export async function getProfileByUsername(username: string) {
       return null;
     }
 
-    // Get dynamic fields from registry (username -> profile_id mappings)
-    console.log('Fetching dynamic fields from registry...');
+    // Get the usernames table ID from registry
+    if (!('fields' in registryResult.data.content)) {
+      console.log('Registry content has no fields');
+      return null;
+    }
+    const registryFields = registryResult.data.content.fields as any;
+    const usernamesTableId = registryFields.usernames.fields.id.id;
+    console.log('Usernames table ID:', usernamesTableId);
+
+    // Get dynamic fields from usernames table (username -> profile_id mappings)
+    console.log('Fetching dynamic fields from usernames table...');
     const dynamicFields = await suiClient.getDynamicFields({
-      parentId: REGISTRY_ID,
+      parentId: usernamesTableId,
     });
 
     console.log('Dynamic fields:', dynamicFields);
@@ -129,7 +138,7 @@ export async function getProfileByUsername(username: string) {
       if (field.name && field.name.value === username) {
         // Get the dynamic field object to extract the profile ID
         const fieldObject = await suiClient.getDynamicFieldObject({
-          parentId: REGISTRY_ID,
+          parentId: usernamesTableId,
           name: {
             type: 'string',
             value: username
