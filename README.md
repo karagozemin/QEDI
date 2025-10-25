@@ -139,7 +139,7 @@ VITE_TWITCH_CLIENT_ID=your_twitch_client_id_here
 
 # Deployed smart contract package IDs
 VITE_PACKAGE_ID=0xb2d7a68d8711ceac4a5ee6c7fbec61456083d6ff20858b6d38f86c9922d02673
-VITE_REGISTRY_ID=0xe37ab0f291b0b0b5e91fcfb3cefd655bb6666036fbef1062a96247dd7cd995a1
+VITE_REGISTRY_ID=0x6b879e03c806815ea844dcebcd44447250c8b9cdc9c7553d3443dfb00cc2ce77
 
 # Walrus configuration for decentralized storage
 VITE_WALRUS_PUBLISHER_URL=https://publisher.walrus-testnet.walrus.space
