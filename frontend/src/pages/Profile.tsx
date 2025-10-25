@@ -47,7 +47,7 @@ export default function Profile() {
     }
   };
 
-  const handleLinkClick = (url: string) => {
+  const handleLinkClick = async (url: string, linkIndex: number) => {
     // Ensure URL has protocol
     let formattedUrl = url;
     if (!url.startsWith('http://') && !url.startsWith('https://')) {
@@ -56,7 +56,30 @@ export default function Profile() {
     
     console.log('Opening URL:', formattedUrl);
     
-    // Open the link - no on-chain tracking to avoid transaction prompts
+    // Track click on-chain (sponsored transaction)
+    try {
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL || 'https://qedi.onrender.com'}/api/track-click`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          profileId: profile.data.objectId,
+          linkIndex: linkIndex
+        }),
+      });
+
+      if (response.ok) {
+        console.log('Click tracked successfully');
+        // Reload profile to update click counts
+        loadProfile();
+      }
+    } catch (error) {
+      console.error('Failed to track click:', error);
+      // Continue with opening link even if tracking fails
+    }
+    
+    // Open the link
     window.open(formattedUrl, '_blank', 'noopener,noreferrer');
   };
 
@@ -196,11 +219,11 @@ export default function Profile() {
                   const linkData = link.fields || link;
                   
                   return (
-                    <button
-                      key={index}
-                      onClick={() => handleLinkClick(linkData.url)}
-                      className="w-full group relative overflow-hidden rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10 hover:border-white/30 hover:bg-white/10 transition-all duration-300 hover:scale-[1.02] hover:shadow-xl hover:shadow-blue-500/20"
-                    >
+                        <button
+                          key={index}
+                          onClick={() => handleLinkClick(linkData.url, index)}
+                          className="w-full group relative overflow-hidden rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10 hover:border-white/30 hover:bg-white/10 transition-all duration-300 hover:scale-[1.02] hover:shadow-xl hover:shadow-blue-500/20"
+                        >
                       <div className="absolute inset-0 bg-gradient-to-r from-blue-500/0 via-purple-500/0 to-pink-500/0 group-hover:from-blue-500/10 group-hover:via-purple-500/10 group-hover:to-pink-500/10 transition-all duration-300"></div>
                       <div className="relative flex items-center justify-between p-5">
                         <div className="flex items-center gap-4 flex-1">

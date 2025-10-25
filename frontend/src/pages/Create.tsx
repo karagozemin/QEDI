@@ -22,6 +22,8 @@ export default function Create() {
     theme: 'default',
     links: [] as Array<{ title: string; url: string; icon: string }>
   });
+  const [, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string>('');
 
   // Check if current wallet is an Enoki wallet (zkLogin)
   const connectedWallet = wallets.find(wallet => 
@@ -31,6 +33,33 @@ export default function Create() {
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        alert('Please select an image file');
+        return;
+      }
+      
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        alert('Image size should be less than 5MB');
+        return;
+      }
+      
+      setAvatarFile(file);
+      
+      // Create preview URL
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setAvatarPreview(e.target?.result as string);
+        setFormData(prev => ({ ...prev, avatarUrl: e.target?.result as string }));
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   // Disabled for now - links should be added via Edit Profile
@@ -439,15 +468,56 @@ export default function Create() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Avatar URL
+                    Profile Picture
                   </label>
-                  <input
-                    type="url"
-                    value={formData.avatarUrl}
-                    onChange={(e) => handleInputChange('avatarUrl', e.target.value)}
-                    placeholder="https://example.com/avatar.jpg"
-                    className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600/50 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
-                  />
+                  
+                  {/* Image Upload Area */}
+                  <div className="relative">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      className="hidden"
+                      id="avatar-upload"
+                    />
+                    <label
+                      htmlFor="avatar-upload"
+                      className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-600/50 rounded-xl cursor-pointer bg-gray-700/30 hover:bg-gray-700/50 transition-all duration-300"
+                    >
+                      {avatarPreview ? (
+                        <div className="flex flex-col items-center">
+                          <img 
+                            src={avatarPreview} 
+                            alt="Preview" 
+                            className="w-16 h-16 rounded-full object-cover mb-2"
+                          />
+                          <span className="text-sm text-gray-300">Click to change</span>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col items-center">
+                          <svg className="w-8 h-8 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                          </svg>
+                          <span className="text-sm text-gray-300">Click to upload image</span>
+                          <span className="text-xs text-gray-500 mt-1">Max 5MB</span>
+                        </div>
+                      )}
+                    </label>
+                  </div>
+                  
+                  {/* Manual URL Input (Alternative) */}
+                  <div className="mt-4">
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                      Or enter image URL
+                    </label>
+                    <input
+                      type="url"
+                      value={formData.avatarUrl}
+                      onChange={(e) => handleInputChange('avatarUrl', e.target.value)}
+                      placeholder="https://example.com/avatar.jpg"
+                      className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600/50 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
+                    />
+                  </div>
                 </div>
 
                 <div className="flex justify-end">
