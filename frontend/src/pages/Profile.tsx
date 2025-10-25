@@ -2,14 +2,14 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useSignAndExecuteTransaction } from '@mysten/dapp-kit';
 import { suiClient } from '../lib/sui-client';
-import { REGISTRY_ID, PACKAGE_ID } from '../lib/constants';
+import { REGISTRY_ID } from '../lib/constants';
 import { recordLinkClickTransaction } from '../lib/sui-client';
 import SocialIcon from '../components/SocialIcon';
 
 export default function Profile() {
   const { username } = useParams<{ username: string }>();
   const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction();
-  const [profile, setProfile] = useState<any>(null);
+  const [profile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
 
