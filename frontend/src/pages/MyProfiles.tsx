@@ -55,7 +55,20 @@ export default function MyProfiles() {
       console.log('Check on Sui Explorer: https://suiexplorer.com/txblock/VWAsLReDgtG4EBd2K7mEnHx18qF5aNEHTMperpds7go?network=testnet');
       
       console.log('All profiles found:', allProfiles);
-      setProfiles(allProfiles);
+      
+      // Sort by created_at - newest first
+      const sortedProfiles = allProfiles.sort((a, b) => {
+        const aCreatedAt = Number(a.data?.content?.fields?.created_at || 0);
+        const bCreatedAt = Number(b.data?.content?.fields?.created_at || 0);
+        return bCreatedAt - aCreatedAt; // Descending order (newest first)
+      });
+      
+      console.log('Sorted profiles (newest first):', sortedProfiles.map(p => ({
+        username: p.data?.content?.fields?.username,
+        created_at: p.data?.content?.fields?.created_at
+      })));
+      
+      setProfiles(sortedProfiles);
     } catch (error) {
       console.error('Error loading profiles:', error);
     } finally {

@@ -11,6 +11,9 @@ export default function Create() {
   const { mutateAsync: signTransaction } = useSignTransaction();
   const [step, setStep] = useState(1);
   const [isCreating, setIsCreating] = useState(false);
+  const [showSuccessToast, setShowSuccessToast] = useState(false);
+  const [showErrorToast, setShowErrorToast] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
   const [formData, setFormData] = useState({
     username: '',
     displayName: '',
@@ -30,12 +33,13 @@ export default function Create() {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const addLink = () => {
-    setFormData(prev => ({
-      ...prev,
-      links: [...prev.links, { title: '', url: '', icon: 'link' }]
-    }));
-  };
+  // Disabled for now - links should be added via Edit Profile
+  // const addLink = () => {
+  //   setFormData(prev => ({
+  //     ...prev,
+  //     links: [...prev.links, { title: '', url: '', icon: 'link' }]
+  //   }));
+  // };
 
   const updateLink = (index: number, field: string, value: string) => {
     setFormData(prev => ({
@@ -158,7 +162,9 @@ export default function Create() {
           const { result } = await executeResponse.json();
           console.log('✅ Sponsored transaction executed successfully:', result);
           
-          alert('Profile created successfully with sponsored transaction! No gas fees paid.');
+          // Show success toast
+          setShowSuccessToast(true);
+          setTimeout(() => setShowSuccessToast(false), 5000);
           
           // Reset form
           setFormData({
@@ -173,7 +179,9 @@ export default function Create() {
           
         } catch (sponsorError) {
           console.error('Sponsored transaction failed:', sponsorError);
-          alert(`Sponsored transaction failed: ${sponsorError instanceof Error ? sponsorError.message : 'Unknown error'}`);
+          setErrorMessage(sponsorError instanceof Error ? sponsorError.message : 'Unknown error');
+          setShowErrorToast(true);
+          setTimeout(() => setShowErrorToast(false), 5000);
         }
       } else {
         console.log('Using regular wallet transaction...');
@@ -187,8 +195,8 @@ export default function Create() {
           onSuccess: async (result) => {
             console.log('Profile created successfully:', result);
             
-            // Step 2: Add links if any exist
-            if (formData.links.length > 0) {
+            // Step 2: Add links if any exist (DISABLED - use Edit Profile instead)
+            if (false && formData.links.length > 0) {
               try {
                 // Get the created profile ID from the transaction result
                 let profileId = null;
@@ -196,8 +204,9 @@ export default function Create() {
                 console.log('Full transaction result:', JSON.stringify(result, null, 2));
                 
                 // Try to get profile ID from objectChanges (most reliable)
-                if ('objectChanges' in result && Array.isArray(result.objectChanges)) {
-                  const createdObject = result.objectChanges.find((change: any) => 
+                const resultWithChanges = result as any;
+                if ('objectChanges' in result && Array.isArray(resultWithChanges.objectChanges)) {
+                  const createdObject = resultWithChanges.objectChanges.find((change: any) => 
                     change.type === 'created' && 
                     change.objectType && 
                     change.objectType.includes('LinkTreeProfile')
@@ -282,11 +291,9 @@ export default function Create() {
                 alert('Profile created but some links failed to add. Please add them manually.');
               }
             } else {
-              const successMessage = isEnokiConnected 
-                ? 'Profile created successfully! (Gas-free with zkLogin)'
-                : `Profile created successfully! Transaction: ${result.digest}`;
-              
-              alert(successMessage);
+              // Show success toast
+              setShowSuccessToast(true);
+              setTimeout(() => setShowSuccessToast(false), 5000);
             }
 
             // Reset form
@@ -302,7 +309,9 @@ export default function Create() {
           },
           onError: (error) => {
             console.error('Profile creation failed:', error);
-            alert(`Profile creation failed: ${error.message}`);
+            setErrorMessage(error.message || 'Failed to create profile');
+            setShowErrorToast(true);
+            setTimeout(() => setShowErrorToast(false), 5000);
           },
         }
         );
@@ -455,17 +464,26 @@ export default function Create() {
 
             {step === 2 && (
               <div className="space-y-6">
-                <div className="flex justify-between items-center">
-                  <h3 className="text-2xl font-bold text-white">Add Your Links</h3>
-                  <button
-                    onClick={addLink}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-300"
-                  >
-                    + Add Link
-                  </button>
+                <h3 className="text-2xl font-bold text-white mb-4">Add Your Links</h3>
+                
+                {/* Info Box */}
+                <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-6 mb-6">
+                  <div className="flex items-start gap-4">
+                    <div className="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                      <svg className="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h4 className="text-white font-semibold mb-2">Add Links After Profile Creation</h4>
+                      <p className="text-gray-300 text-sm leading-relaxed">
+                        Create your profile first, then add your links by going to <span className="text-blue-400 font-medium">My Profiles → Edit Profile</span>. This ensures all your links are properly saved on the blockchain.
+                      </p>
+                    </div>
+                  </div>
                 </div>
 
-                <div className="space-y-4">
+                <div className="space-y-4 hidden">
                   {formData.links.map((link, index) => (
                     <div key={index} className="p-4 bg-gray-700/30 rounded-xl border border-gray-600/30">
                       <div className="grid md:grid-cols-3 gap-4">
@@ -631,6 +649,40 @@ export default function Create() {
           </div>
         </div>
       </div>
+
+      {/* Success Toast */}
+      {showSuccessToast && (
+        <div className="fixed top-4 right-4 z-50 animate-slide-in">
+          <div className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-6 py-4 rounded-2xl shadow-2xl border border-green-400/30 backdrop-blur-xl flex items-center gap-4 max-w-md">
+            <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center flex-shrink-0">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <div>
+              <h4 className="font-bold text-lg">Profile Created!</h4>
+              <p className="text-sm text-green-50">Your LinkTree profile is now live on-chain</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Error Toast */}
+      {showErrorToast && (
+        <div className="fixed top-4 right-4 z-50 animate-slide-in">
+          <div className="bg-gradient-to-r from-red-500 to-rose-600 text-white px-6 py-4 rounded-2xl shadow-2xl border border-red-400/30 backdrop-blur-xl flex items-center gap-4 max-w-md">
+            <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center flex-shrink-0">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </div>
+            <div>
+              <h4 className="font-bold text-lg">Creation Failed</h4>
+              <p className="text-sm text-red-50">{errorMessage}</p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

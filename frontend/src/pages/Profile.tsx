@@ -1,12 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { useSignAndExecuteTransaction } from '@mysten/dapp-kit';
-import { getProfileByUsername, recordLinkClickTransaction } from '../lib/sui-client';
+import { getProfileByUsername } from '../lib/sui-client';
 import SocialIcon from '../components/SocialIcon';
+import Galaxy from '../components/Galaxy';
 
 export default function Profile() {
   const { username } = useParams<{ username: string }>();
-  const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction();
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
@@ -48,7 +47,7 @@ export default function Profile() {
     }
   };
 
-  const handleLinkClick = async (linkIndex: number, url: string) => {
+  const handleLinkClick = (url: string) => {
     // Ensure URL has protocol
     let formattedUrl = url;
     if (!url.startsWith('http://') && !url.startsWith('https://')) {
@@ -57,32 +56,8 @@ export default function Profile() {
     
     console.log('Opening URL:', formattedUrl);
     
-    // Open the link
+    // Open the link - no on-chain tracking to avoid transaction prompts
     window.open(formattedUrl, '_blank', 'noopener,noreferrer');
-
-    // Record the click on-chain (optional, requires wallet connection)
-    if (profile?.data?.objectId) {
-      try {
-        const tx = recordLinkClickTransaction(profile.data.objectId, linkIndex);
-        
-        signAndExecuteTransaction(
-          { transaction: tx },
-          {
-            onSuccess: (result) => {
-              console.log('Click recorded:', result);
-              // Reload profile to update click count
-              loadProfile();
-            },
-            onError: (error) => {
-              console.error('Failed to record click:', error);
-              // Don't show error to user, click tracking is optional
-            },
-          }
-        );
-      } catch (error) {
-        console.error('Failed to prepare click transaction:', error);
-      }
-    }
   };
 
   if (loading) {
@@ -121,103 +96,183 @@ export default function Profile() {
   }
 
   const profileData = profile.data?.content?.fields;
+  const totalClicks = profileData?.total_clicks || '0';
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-blue-900 py-12">
-      <div className="container mx-auto px-4">
-        <div className="max-w-md mx-auto">
-          {/* Profile Header */}
-          <div className="text-center mb-8">
-            {profileData?.avatar_url && (
-              <img 
-                src={profileData.avatar_url} 
-                alt={profileData.display_name}
-                className="w-24 h-24 rounded-full mx-auto mb-4 border-4 border-blue-500/30 object-cover"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).style.display = 'none';
-                }}
-              />
-            )}
-            <h1 className="text-3xl font-bold text-white mb-2">
-              {profileData?.display_name || 'Unnamed Profile'}
-            </h1>
-            <p className="text-blue-400 font-medium mb-4">@{profileData?.username}</p>
-            {profileData?.bio && (
-              <p className="text-gray-300 text-center max-w-sm mx-auto">
-                {profileData.bio}
-              </p>
-            )}
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-gray-950 via-indigo-950 to-gray-900 flex items-center justify-center py-12 px-4 relative overflow-hidden">
+          {/* Galaxy Background */}
+          <div className="fixed inset-0 z-0">
+            <Galaxy 
+              hueShift={240}
+              density={0.8}
+              glowIntensity={0.2}
+              saturation={0.3}
+              twinkleIntensity={0.5}
+              rotationSpeed={0.05}
+              mouseInteraction={false}
+              transparent={true}
+            />
+          </div>
+          
+          {/* Animated Background Blobs */}
+          <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
+            <div className="absolute -top-1/2 -left-1/2 w-full h-full bg-blue-500/8 rounded-full blur-3xl animate-pulse"></div>
+            <div className="absolute -bottom-1/2 -right-1/2 w-full h-full bg-purple-500/8 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
           </div>
 
-          {/* Links */}
-          <div className="space-y-4">
-            {profileData?.links && profileData.links.length > 0 ? (
-              profileData.links.map((link: any, index: number) => {
-                // Extract link data from fields
-                const linkData = link.fields || link;
-                
-                return (
-                  <button
-                    key={index}
-                    onClick={() => handleLinkClick(index, linkData.url)}
-                    className="w-full flex items-center justify-between p-4 bg-gray-800/50 backdrop-blur-xl rounded-2xl border border-gray-600/30 hover:bg-gray-700/50 hover:border-blue-500/50 hover:shadow-lg hover:shadow-blue-500/10 transform hover:-translate-y-1 transition-all duration-300 group"
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center group-hover:scale-110 transition-all duration-300 ${
-                        linkData.icon === 'twitter' ? 'bg-black text-white' :
-                        linkData.icon === 'instagram' ? 'bg-gradient-to-br from-purple-500 to-pink-500 text-white' :
-                        linkData.icon === 'youtube' ? 'bg-red-600 text-white' :
-                        linkData.icon === 'github' ? 'bg-gray-900 text-white' :
-                        linkData.icon === 'linkedin' ? 'bg-blue-600 text-white' :
-                        linkData.icon === 'website' ? 'bg-blue-500 text-white' :
-                        linkData.icon === 'email' ? 'bg-gray-600 text-white' :
-                        'bg-gray-700 text-white'
-                      }`}>
-                        <SocialIcon icon={linkData.icon} className="w-6 h-6" />
-                      </div>
-                      <div className="text-left">
-                        <div className="text-white font-semibold group-hover:text-blue-300 transition-colors duration-300">
-                          {linkData.title}
-                        </div>
-                        <div className="text-gray-400 text-sm">
-                          {linkData.click_count || 0} clicks
-                        </div>
-                      </div>
+          <div className="container mx-auto max-w-2xl relative z-10 w-full">
+        {/* Glassmorphism Card */}
+        <div className="backdrop-blur-xl bg-white/5 rounded-3xl border border-white/10 shadow-2xl overflow-hidden mt-20 mb-8">
+          {/* Header Section */}
+          <div className="relative bg-gradient-to-br from-blue-600/15 to-purple-600/15 p-8 sm:p-12">
+            <div className="text-center">
+              {/* Avatar with Animated Gradient Ring */}
+              <div className="relative inline-block mb-4">
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-full blur-lg opacity-75 animate-pulse"></div>
+                <div className="relative w-28 h-28 sm:w-32 sm:h-32 rounded-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 p-1">
+                  {profileData?.avatar_url ? (
+                    <img 
+                      src={profileData.avatar_url} 
+                      alt={profileData.display_name}
+                      className="w-full h-full rounded-full object-cover bg-gray-900"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>';
+                      }}
+                    />
+                  ) : (
+                    <div className="w-full h-full rounded-full bg-gradient-to-br from-gray-700 to-gray-900 flex items-center justify-center">
+                      <svg className="w-16 h-16 text-white" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                      </svg>
                     </div>
-                    <svg className="w-5 h-5 text-gray-400 group-hover:text-blue-400 transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                  )}
+                </div>
+              </div>
+
+              {/* Name & Username */}
+              <h1 className="text-3xl sm:text-4xl font-bold text-white mb-3 tracking-tight">
+                {profileData?.display_name || 'Unnamed Profile'}
+              </h1>
+              <div className="flex items-center justify-center gap-2 mb-4">
+                <p className="text-lg text-blue-300 font-medium">@{profileData?.username}</p>
+                {profileData?.is_verified && (
+                  <svg className="w-6 h-6 text-blue-400" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  </svg>
+                )}
+              </div>
+
+              {/* Bio */}
+              {profileData?.bio && (
+                <p className="text-gray-200 text-lg max-w-md mx-auto leading-relaxed mb-8">
+                  {profileData.bio}
+                </p>
+              )}
+
+              {/* Stats Bar */}
+              <div className="flex items-center justify-center gap-6 mt-8">
+                <div className="px-6 py-3 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-xl backdrop-blur-sm border border-white/20 shadow-lg">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-white">{totalClicks}</div>
+                    <div className="text-xs text-gray-300 font-medium mt-1">Total Clicks</div>
+                  </div>
+                </div>
+                <div className="px-6 py-3 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-xl backdrop-blur-sm border border-white/20 shadow-lg">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-white">{profileData?.links?.length || 0}</div>
+                    <div className="text-xs text-gray-300 font-medium mt-1">Links</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Links Section */}
+          <div className="p-6 sm:p-8">
+            
+            <div className="space-y-4">
+              {profileData?.links && profileData.links.length > 0 ? (
+                profileData.links.map((link: any, index: number) => {
+                  const linkData = link.fields || link;
+                  
+                  return (
+                    <button
+                      key={index}
+                      onClick={() => handleLinkClick(linkData.url)}
+                      className="w-full group relative overflow-hidden rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10 hover:border-white/30 hover:bg-white/10 transition-all duration-300 hover:scale-[1.02] hover:shadow-xl hover:shadow-blue-500/20"
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-r from-blue-500/0 via-purple-500/0 to-pink-500/0 group-hover:from-blue-500/10 group-hover:via-purple-500/10 group-hover:to-pink-500/10 transition-all duration-300"></div>
+                      <div className="relative flex items-center justify-between p-5">
+                        <div className="flex items-center gap-4 flex-1">
+                          <div className={`w-14 h-14 rounded-xl flex items-center justify-center group-hover:scale-105 transition-all duration-300 shadow-lg ${
+                            linkData.icon === 'twitter' ? 'bg-black' :
+                            linkData.icon === 'instagram' ? 'bg-gradient-to-br from-[#833AB4] via-[#FD1D1D] to-[#FCAF45]' :
+                            linkData.icon === 'youtube' ? 'bg-[#FF0000]' :
+                            linkData.icon === 'github' ? 'bg-[#181717]' :
+                            linkData.icon === 'linkedin' ? 'bg-[#0A66C2]' :
+                            linkData.icon === 'website' ? 'bg-gradient-to-br from-blue-500 to-indigo-600' :
+                            linkData.icon === 'email' ? 'bg-gradient-to-br from-gray-600 to-gray-800' :
+                            'bg-gradient-to-br from-purple-500 to-pink-500'
+                          }`}>
+                            <SocialIcon icon={linkData.icon} className="w-7 h-7 text-white" />
+                          </div>
+                          <div className="text-left flex-1 min-w-0">
+                            <div className="text-white text-lg font-semibold group-hover:text-blue-300 transition-colors duration-300 truncate">
+                              {linkData.title}
+                            </div>
+                            {linkData.click_count && linkData.click_count !== '0' && (
+                              <div className="text-gray-400 text-sm flex items-center gap-1 mt-1">
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                </svg>
+                                {linkData.click_count} clicks
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        <svg className="w-6 h-6 text-gray-400 group-hover:text-white group-hover:translate-x-1 transition-all duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        </svg>
+                      </div>
+                    </button>
+                  );
+                })
+              ) : (
+                <div className="text-center py-16">
+                  <div className="w-20 h-20 bg-white/5 rounded-2xl flex items-center justify-center mx-auto mb-6 backdrop-blur-sm border border-white/10">
+                    <svg className="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
                     </svg>
-                  </button>
-                );
-              })
-            ) : (
-              <div className="text-center py-12">
-                <div className="w-16 h-16 bg-gray-700/30 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <svg className="w-8 h-8 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  </div>
+                  <p className="text-gray-300 text-lg font-medium">No links added yet</p>
+                  <p className="text-gray-400 text-sm mt-2">Links will appear here when they're added</p>
+                </div>
+              )}
+            </div>
+          </div>
+
+              {/* Footer */}
+              <div className="border-t border-white/10 p-6 sm:p-8 bg-black/20">
+            <div className="text-center">
+              <div className="flex items-center justify-center gap-3 text-gray-300 mb-4">
+                <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
+                  <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
                   </svg>
                 </div>
-                <p className="text-gray-400">No links added yet</p>
+                <span className="font-medium">Powered by QEDI</span>
               </div>
-            )}
-          </div>
-
-          {/* Footer */}
-          <div className="text-center mt-12 pt-8 border-t border-gray-700/50">
-            <div className="flex items-center justify-center gap-2 text-gray-400 text-sm mb-4">
-              <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
-                <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+              <a 
+                href="/create" 
+                className="inline-flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:shadow-blue-500/25 transform hover:-translate-y-1 transition-all duration-300"
+              >
+                Create your own LinkTree
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                 </svg>
-              </div>
-              <span>Powered by QEDI</span>
+              </a>
             </div>
-            <a 
-              href="/" 
-              className="text-blue-400 hover:text-blue-300 text-sm font-medium transition-colors duration-300"
-            >
-              Create your own LinkTree →
-            </a>
           </div>
         </div>
       </div>

@@ -138,6 +138,32 @@ export default function EditProfile() {
             <p className="text-xl text-gray-300">Manage your on-chain LinkTree profile</p>
           </div>
 
+          {/* Profile Selector - Only show if multiple profiles */}
+          {profiles.length > 1 && (
+            <div className="bg-gradient-to-br from-blue-800/30 to-indigo-800/30 backdrop-blur-xl rounded-2xl shadow-xl border border-blue-500/30 p-6 mb-8">
+              <label className="block text-sm font-medium text-gray-300 mb-3">
+                Select Profile to Edit
+              </label>
+              <select
+                value={selectedProfile?.data?.objectId || ''}
+                onChange={(e) => {
+                  const profile = profiles.find(p => p.data?.objectId === e.target.value);
+                  setSelectedProfile(profile || null);
+                }}
+                className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600/50 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
+              >
+                {profiles.map((profile) => {
+                  const data = profile.data?.content?.fields;
+                  return (
+                    <option key={profile.data?.objectId} value={profile.data?.objectId}>
+                      @{data?.username} - {data?.display_name}
+                    </option>
+                  );
+                })}
+              </select>
+            </div>
+          )}
+
           {/* Profile Info */}
           <div className="bg-gradient-to-br from-gray-800/50 to-gray-700/30 backdrop-blur-xl rounded-3xl shadow-2xl border border-gray-600/30 p-8 mb-8">
             <h2 className="text-2xl font-bold text-white mb-6">Current Profile</h2>
