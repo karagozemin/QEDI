@@ -2,11 +2,10 @@
 /// Full-featured decentralized profile management with zkLogin, sponsored transactions, and SuiNS integration
 module qedi::linktree {
     use std::string::{Self, String};
-    use std::option::{Self, Option};
-    use sui::event;
+    use std::option;
     use sui::table::{Self, Table};
-    use sui::dynamic_field as df;
     use sui::clock::{Self, Clock};
+    use sui::event;
 
     // ===== Error Codes =====
     const EInvalidUsername: u64 = 1;

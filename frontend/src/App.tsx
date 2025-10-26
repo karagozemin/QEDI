@@ -202,19 +202,25 @@ function App() {
       <SuiClientProvider networks={networkConfig} defaultNetwork="testnet">
         <WalletProvider autoConnect>
           <BrowserRouter>
-            <div className="min-h-screen bg-gray-900">
-              <NavbarContent />
+            <Routes>
+              {/* Profile route without navbar - clean view */}
+              <Route path="/profile/:username" element={<Profile />} />
               
+              {/* All other routes with navbar */}
+              <Route path="*" element={
+                <div className="min-h-screen bg-gray-900">
+                  <NavbarContent />
                   <Routes>
                     <Route path="/" element={<Home />} />
                     <Route path="/create" element={<Create />} />
                     <Route path="/my-profiles" element={<MyProfiles />} />
                     <Route path="/edit-profile" element={<EditProfile />} />
-                    <Route path="/profile/:username" element={<Profile />} />
                     <Route path="/auth/callback" element={<AuthCallback />} />
                     <Route path="/login/callback" element={<AuthCallback />} />
                   </Routes>
-            </div>
+                </div>
+              } />
+            </Routes>
           </BrowserRouter>
         </WalletProvider>
       </SuiClientProvider>
