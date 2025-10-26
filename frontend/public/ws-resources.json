@@ -1,0 +1,14 @@
+{
+  "routes": {
+    "/*": "/index.html",
+    "/:username": "/index.html",
+    "/auth/callback": "/index.html",
+    "/create": "/index.html",
+    "/edit-profile": "/index.html",
+    "/login/callback": "/index.html",
+    "/my-profiles": "/index.html"
+  },
+  "site_name": "QEDI",
+  "object_id": "0x827a08b582d68efa8d230f98d0975e7f160d96ef8500ea3e6291aa66c8807967"
+}
+

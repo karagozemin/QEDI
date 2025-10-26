@@ -208,7 +208,7 @@ export default function MyProfiles() {
                       
                       <div className="flex gap-3">
                         <a 
-                          href={`/profile/${profileData?.username}`}
+                          href={`/${profileData?.username}`}
                           className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-blue-500/25 transform hover:-translate-y-1 transition-all duration-300"
                         >
                           View Profile

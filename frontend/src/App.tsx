@@ -13,7 +13,6 @@ import Home from './pages/Home';
 import Create from './pages/Create';
 import MyProfiles from './pages/MyProfiles';
 import EditProfile from './pages/EditProfile';
-import Profile from './pages/Profile';
 import AuthCallback from './pages/AuthCallback';
 
 const queryClient = new QueryClient();
@@ -204,7 +203,6 @@ function App() {
           <BrowserRouter>
             <Routes>
               {/* Profile route without navbar - clean view */}
-              <Route path="/profile/:username" element={<Profile />} />
               
               {/* All other routes with navbar */}
               <Route path="*" element={
@@ -217,6 +215,8 @@ function App() {
                     <Route path="/edit-profile" element={<EditProfile />} />
                     <Route path="/auth/callback" element={<AuthCallback />} />
                     <Route path="/login/callback" element={<AuthCallback />} />
+                    <Route path="/:username" element={<Home />} />
+
                   </Routes>
                 </div>
               } />

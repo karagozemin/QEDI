@@ -1,6 +1,15 @@
+import { useParams } from 'react-router-dom';
 import DarkVeil from '../components/DarkVeil';
+import Profile from './Profile';
 
 export default function Home() {
+  const { username } = useParams<{ username: string }>();
+
+  // If username parameter exists, show Profile component
+  if (username) {
+    return <Profile />;
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-blue-900">
       {/* DarkVeil Background - Fixed to cover entire page */}
