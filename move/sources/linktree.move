@@ -2,11 +2,7 @@
 /// Full-featured decentralized profile management with zkLogin, sponsored transactions, and SuiNS integration
 module qedi::linktree {
     use std::string::{Self, String};
-    use std::vector;
     use std::option::{Self, Option};
-    use sui::object::{Self, UID, ID};
-    use sui::transfer;
-    use sui::tx_context::{Self, TxContext};
     use sui::event;
     use sui::table::{Self, Table};
     use sui::dynamic_field as df;
@@ -112,6 +108,24 @@ module qedi::linktree {
 
     /// Initialize the module - create global registry
     fun init(ctx: &mut TxContext) {
+        // Create username registry
+        let registry = UsernameRegistry {
+            id: object::new(ctx),
+            usernames: table::new(ctx),
+            total_profiles: 0,
+        };
+        transfer::share_object(registry);
+
+        // Create admin capability
+        let admin_cap = AdminCap {
+            id: object::new(ctx),
+        };
+        transfer::transfer(admin_cap, tx_context::sender(ctx));
+    }
+
+    #[test_only]
+    /// Initialize for testing - creates registry without events
+    public fun init_for_testing(ctx: &mut TxContext) {
         // Create username registry
         let registry = UsernameRegistry {
             id: object::new(ctx),

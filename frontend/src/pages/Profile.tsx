@@ -29,6 +29,8 @@ export default function Profile() {
       
       // Use the new getProfileByUsername function
       const profileResult = await getProfileByUsername(username);
+
+      console.log('Profile result:', profileResult); 
       
       if (!profileResult) {
         console.log('Profile not found for username:', username);
@@ -119,7 +121,6 @@ export default function Profile() {
   }
 
   const profileData = profile.data?.content?.fields;
-  const totalClicks = profileData?.total_clicks || '0';
 
       return (
         <div className="min-h-screen bg-gradient-to-br from-gray-950 via-indigo-950 to-gray-900 flex items-center justify-center py-12 px-4 relative overflow-hidden">
@@ -193,19 +194,31 @@ export default function Profile() {
               )}
 
               {/* Stats Bar */}
-              <div className="flex items-center justify-center gap-6 mt-8">
-                <div className="px-6 py-3 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-xl backdrop-blur-sm border border-white/20 shadow-lg">
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-white">{totalClicks}</div>
-                    <div className="text-xs text-gray-300 font-medium mt-1">Total Clicks</div>
-                  </div>
-                </div>
-                <div className="px-6 py-3 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-xl backdrop-blur-sm border border-white/20 shadow-lg">
+              <div className="flex items-center justify-center gap-6 mt-8 flex-wrap">
+                <div className="w-36 h-20 flex items-center justify-center bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-xl backdrop-blur-sm border border-white/20 shadow-lg">
                   <div className="text-center">
                     <div className="text-2xl font-bold text-white">{profileData?.links?.length || 0}</div>
                     <div className="text-xs text-gray-300 font-medium mt-1">Links</div>
                   </div>
                 </div>
+                <a 
+                  href={`https://suiscan.xyz/testnet/object/${profile.data?.objectId}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-36 h-20 flex items-center justify-center bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-xl backdrop-blur-sm border border-white/20 shadow-lg hover:shadow-green-500/25 hover:scale-105 transition-all duration-300"
+                  title="View on SuiScan Explorer"
+                >
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-white">
+                      <svg className="w-8 h-8 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                      </svg>
+                    </div>
+                    <div className="text-xs text-gray-300 font-medium mt-1">
+                      SuiScan
+                    </div>
+                  </div>
+                </a>
               </div>
             </div>
           </div>

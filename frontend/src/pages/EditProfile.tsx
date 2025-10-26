@@ -301,7 +301,21 @@ export default function EditProfile() {
 
           {/* Profile Info */}
           <div className="bg-gradient-to-br from-gray-800/50 to-gray-700/30 backdrop-blur-xl rounded-3xl shadow-2xl border border-gray-600/30 p-8 mb-8">
-            <h2 className="text-2xl font-bold text-white mb-6">Current Profile</h2>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-white">Current Profile</h2>
+              <a 
+                href={`https://suiscan.xyz/testnet/object/${selectedProfile?.data?.objectId}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-4 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white text-sm font-semibold rounded-lg hover:shadow-lg hover:shadow-green-500/25 transform hover:-translate-y-0.5 transition-all duration-300 flex items-center gap-2"
+                title="View on SuiScan Explorer"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                </svg>
+                View on SuiScan
+              </a>
+            </div>
             <div className="grid md:grid-cols-2 gap-6">
               <div>
                 <p className="text-gray-300"><span className="font-medium">Username:</span> {profileData?.username}</p>
@@ -310,8 +324,8 @@ export default function EditProfile() {
               </div>
               <div>
                 <p className="text-gray-300"><span className="font-medium">Theme:</span> {profileData?.theme}</p>
-                <p className="text-gray-300"><span className="font-medium">Total Clicks:</span> {profileData?.total_clicks}</p>
                 <p className="text-gray-300"><span className="font-medium">Links:</span> {profileData?.links?.length || 0}</p>
+                <p className="text-gray-300"><span className="font-medium">Avatar:</span> {profileData?.avatar_url ? '✓' : '✗'}</p>
               </div>
             </div>
           </div>

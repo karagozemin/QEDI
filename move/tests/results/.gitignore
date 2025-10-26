@@ -1,0 +1,6 @@
+# Ignore all test run files
+test_run_*.txt
+
+# Keep the directory structure
+!.gitignore
+

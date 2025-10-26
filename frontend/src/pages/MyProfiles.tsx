@@ -214,6 +214,18 @@ export default function MyProfiles() {
                           View Profile
                         </a>
                         <a 
+                          href={`https://suiscan.xyz/testnet/object/${profile.data?.objectId}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-green-500/25 transform hover:-translate-y-1 transition-all duration-300 flex items-center gap-2"
+                          title="View on SuiScan Explorer"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                          </svg>
+                          SuiScan
+                        </a>
+                        <a 
                           href="/edit-profile"
                           className="px-6 py-3 bg-gray-600 text-white font-semibold rounded-xl hover:bg-gray-700 transition-colors duration-300"
                         >
@@ -223,18 +235,12 @@ export default function MyProfiles() {
                     </div>
 
                     {/* Stats */}
-                    <div className="grid grid-cols-3 gap-4 mb-8">
+                    <div className="grid grid-cols-2 gap-4 mb-8">
                       <div className="bg-gray-700/40 rounded-2xl p-4 text-center">
                         <div className="text-3xl font-bold text-blue-400 mb-1">
                           {profileData?.links?.length || 0}
                         </div>
                         <div className="text-gray-300 text-sm font-medium">Links</div>
-                      </div>
-                      <div className="bg-gray-700/40 rounded-2xl p-4 text-center">
-                        <div className="text-3xl font-bold text-green-400 mb-1">
-                          {profileData?.total_clicks || 0}
-                        </div>
-                        <div className="text-gray-300 text-sm font-medium">Total Clicks</div>
                       </div>
                       <div className="bg-gray-700/40 rounded-2xl p-4 text-center">
                         <div className="text-3xl font-bold text-purple-400 mb-1 capitalize">
