@@ -3,6 +3,7 @@ import { useCurrentAccount } from '@mysten/dapp-kit';
 import { getUserProfiles } from '../lib/sui-client';
 import SocialIcon from '../components/SocialIcon';
 import DarkVeil from '../components/DarkVeil';
+import DashboardLayout from '../components/Layouts/DashboardLayout';
 
 export default function MyProfiles() {
   const currentAccount = useCurrentAccount();
@@ -88,6 +89,7 @@ export default function MyProfiles() {
 
   if (!currentAccount) {
     return (
+      <DashboardLayout>
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-blue-900 pt-24">
         {/* DarkVeil Background - Fixed to cover entire page */}
         <div className="fixed inset-0 opacity-30 pointer-events-none z-0">
@@ -105,11 +107,13 @@ export default function MyProfiles() {
           </div>
         </div>
       </div>
+      </DashboardLayout>
     );
   }
 
   if (loading) {
     return (
+      <DashboardLayout>
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-blue-900 pt-24">
         {/* DarkVeil Background - Fixed to cover entire page */}
         <div className="fixed inset-0 opacity-30 pointer-events-none z-0">
@@ -123,11 +127,13 @@ export default function MyProfiles() {
           </div>
         </div>
       </div>
+      </DashboardLayout>
     );
   }
 
   if (profiles.length === 0) {
     return (
+      <DashboardLayout>
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-blue-900 pt-24">
         {/* DarkVeil Background - Fixed to cover entire page */}
         <div className="fixed inset-0 opacity-30 pointer-events-none z-0">
@@ -151,10 +157,12 @@ export default function MyProfiles() {
           </div>
         </div>
       </div>
+      </DashboardLayout>
     );
   }
 
   return (
+    <DashboardLayout>
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-blue-900 pt-24">
       {/* DarkVeil Background - Fixed to cover entire page */}
       <div className="fixed inset-0 opacity-30 pointer-events-none z-0">
@@ -365,5 +373,6 @@ export default function MyProfiles() {
         </div>
       </div>
     </div>
+    </DashboardLayout>
   );
 }

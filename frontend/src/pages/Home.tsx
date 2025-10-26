@@ -1,6 +1,7 @@
 import { useParams } from 'react-router-dom';
 import DarkVeil from '../components/DarkVeil';
 import Profile from './Profile';
+import DashboardLayout from '../components/Layouts/DashboardLayout';
 
 export default function Home() {
   const { username } = useParams<{ username: string }>();
@@ -11,6 +12,7 @@ export default function Home() {
   }
 
   return (
+    <DashboardLayout>
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-blue-900">
       {/* DarkVeil Background - Fixed to cover entire page */}
       <div className="fixed inset-0 opacity-30 pointer-events-none z-0">
@@ -157,5 +159,6 @@ export default function Home() {
         </div>
       </div>
     </div>
+    </DashboardLayout>
   );
 }

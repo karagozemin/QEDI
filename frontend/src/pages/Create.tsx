@@ -4,6 +4,7 @@ import { isEnokiWallet } from '@mysten/enoki';
 import { createProfileTransaction, addLinkTransaction } from '../lib/sui-client';
 import { BACKEND_URL } from '../lib/constants';
 import DarkVeil from '../components/DarkVeil';
+import DashboardLayout from '../components/Layouts/DashboardLayout';
 
 export default function Create() {
   const currentAccount = useCurrentAccount();
@@ -403,6 +404,7 @@ export default function Create() {
 
   if (!currentAccount) {
     return (
+      <DashboardLayout>
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-blue-900 pt-24">
         {/* DarkVeil Background - Fixed to cover entire page */}
         <div className="fixed inset-0 opacity-30 pointer-events-none z-0">
@@ -432,10 +434,12 @@ export default function Create() {
           </div>
         </div>
       </div>
+      </DashboardLayout>
     );
   }
 
   return (
+    <DashboardLayout>
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-blue-900 pt-24">
       {/* DarkVeil Background - Fixed to cover entire page */}
       <div className="fixed inset-0 opacity-30 pointer-events-none z-0">
@@ -810,5 +814,6 @@ export default function Create() {
         </div>
       )}
     </div>
+    </DashboardLayout>
   );
 }

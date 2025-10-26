@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import DashboardLayout from '../components/Layouts/DashboardLayout';
 
 export default function AuthCallback() {
   const navigate = useNavigate();
@@ -85,6 +86,7 @@ export default function AuthCallback() {
   }, [searchParams, navigate]);
 
   return (
+    <DashboardLayout>
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-blue-900 flex items-center justify-center">
       <div className="text-center max-w-md mx-auto p-8">
         {status === 'loading' && (
@@ -121,5 +123,6 @@ export default function AuthCallback() {
         )}
       </div>
     </div>
+    </DashboardLayout>
   );
 }

@@ -4,6 +4,7 @@ import { isEnokiWallet } from '@mysten/enoki';
 import { getUserProfiles, addMultipleLinksTransaction } from '../lib/sui-client';
 import { BACKEND_URL } from '../lib/constants';
 import DarkVeil from '../components/DarkVeil';
+import DashboardLayout from '../components/Layouts/DashboardLayout';
 
 export default function EditProfile() {
   const currentAccount = useCurrentAccount();
@@ -203,6 +204,7 @@ export default function EditProfile() {
 
   if (!currentAccount) {
     return (
+      <DashboardLayout>
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-blue-900 pt-24">
         {/* DarkVeil Background - Fixed to cover entire page */}
         <div className="fixed inset-0 opacity-30 pointer-events-none z-0">
@@ -215,11 +217,13 @@ export default function EditProfile() {
           </div>
         </div>
       </div>
+      </DashboardLayout>
     );
   }
 
   if (loading) {
     return (
+      <DashboardLayout>
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-blue-900 pt-24">
         {/* DarkVeil Background - Fixed to cover entire page */}
         <div className="fixed inset-0 opacity-30 pointer-events-none z-0">
@@ -232,11 +236,13 @@ export default function EditProfile() {
           </div>
         </div>
       </div>
+      </DashboardLayout>
     );
   }
 
   if (profiles.length === 0) {
     return (
+      <DashboardLayout>
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-blue-900 pt-24">
         {/* DarkVeil Background - Fixed to cover entire page */}
         <div className="fixed inset-0 opacity-30 pointer-events-none z-0">
@@ -255,12 +261,14 @@ export default function EditProfile() {
           </div>
         </div>
       </div>
+      </DashboardLayout>
     );
   }
 
   const profileData = selectedProfile?.data?.content?.fields;
 
   return (
+    <DashboardLayout>
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-blue-900 pt-24">
       {/* DarkVeil Background - Fixed to cover entire page */}
       <div className="fixed inset-0 opacity-30 pointer-events-none z-0">
@@ -494,5 +502,6 @@ export default function EditProfile() {
         </div>
       </div>
     </div>
+    </DashboardLayout>
   );
 }
