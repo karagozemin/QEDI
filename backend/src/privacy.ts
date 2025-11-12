@@ -6,7 +6,9 @@
  */
 
 import crypto from 'crypto';
-import SEAL from 'node-seal';
+// Lazy import for Seal SDK to avoid build issues on Render
+let SEAL: any = null;
+let sealLoadAttempted = false;
 
 // Encryption key (should be in environment variables in production)
 const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'default-encryption-key-change-in-production';
@@ -25,6 +27,29 @@ let sealDecryptor: any = null;
 let sealInitialized = false;
 
 /**
+ * Lazy load Seal SDK
+ */
+async function loadSeal(): Promise<boolean> {
+  if (sealLoadAttempted) {
+    return SEAL !== null;
+  }
+  
+  sealLoadAttempted = true;
+  
+  try {
+    // Dynamic import to avoid build-time errors
+    const sealModule = await import('node-seal');
+    SEAL = sealModule.default || sealModule;
+    console.log('✅ Seal SDK loaded successfully');
+    return true;
+  } catch (error) {
+    console.warn('⚠️ Seal SDK not available, using AES-256-CBC fallback:', error);
+    SEAL = null;
+    return false;
+  }
+}
+
+/**
  * Initialize Seal encryption system
  * Uses BFV scheme for homomorphic encryption
  */
@@ -33,36 +58,43 @@ async function initializeSeal(): Promise<void> {
     return;
   }
 
+  // Try to load Seal SDK first
+  const loaded = await loadSeal();
+  if (!loaded || !SEAL) {
+    sealInitialized = false;
+    return;
+  }
+
   try {
     const seal = await SEAL();
     
     // Encryption parameters
     const schemeType = seal.SchemeType.bfv;
-    const securityLevel = seal.SecurityLevel.tc128;
+    const securityLevel = (seal as any).SecurityLevel?.tc128;
     const polyModulusDegree = 4096;
     const bitSizes = [36, 36, 37];
 
-    const encParams = seal.EncryptionParameters(schemeType);
+    const encParams = new seal.EncryptionParameters(schemeType);
     encParams.setPolyModulusDegree(polyModulusDegree);
     encParams.setCoeffModulus(
       seal.CoeffModulus.Create(polyModulusDegree, Int32Array.from(bitSizes))
     );
     encParams.setPlainModulus(seal.PlainModulus.Batching(polyModulusDegree, 20));
 
-    sealContext = seal.Context(encParams, true, securityLevel);
+    sealContext = new (seal as any).Context(encParams, true, securityLevel);
 
     if (!sealContext.parametersSet()) {
       throw new Error('SEAL: Parameters could not be set');
     }
 
     // Generate keys
-    const keyGenerator = seal.KeyGenerator(sealContext);
+    const keyGenerator = new seal.KeyGenerator(sealContext);
     sealPublicKey = keyGenerator.createPublicKey();
     sealSecretKey = keyGenerator.secretKey();
 
     // Create encryptor and decryptor
-    sealEncryptor = seal.Encryptor(sealContext, sealPublicKey);
-    sealDecryptor = seal.Decryptor(sealContext, sealSecretKey);
+    sealEncryptor = new seal.Encryptor(sealContext, sealPublicKey);
+    sealDecryptor = new seal.Decryptor(sealContext, sealSecretKey);
 
     sealInitialized = true;
     console.log('✅ Seal encryption system initialized');
@@ -86,7 +118,7 @@ async function encryptWithSeal(data: string): Promise<string> {
     }
 
     const seal = await SEAL();
-    const encoder = seal.BatchEncoder(sealContext);
+    const encoder = new seal.BatchEncoder(sealContext);
     
     // Convert string to Int32Array for encoding
     const dataBytes = Buffer.from(data, 'utf8');
@@ -96,7 +128,7 @@ async function encryptWithSeal(data: string): Promise<string> {
     }
 
     // Encode and encrypt
-    const plainText = encoder.encode(dataArray);
+    const plainText = (encoder as any).encode(dataArray);
     const cipherText = sealEncryptor.encrypt(plainText);
     
     // Serialize to base64
@@ -122,18 +154,18 @@ async function decryptWithSeal(encryptedData: string): Promise<string> {
     }
 
     const seal = await SEAL();
-    const encoder = seal.BatchEncoder(sealContext);
+    const encoder = new seal.BatchEncoder(sealContext);
     
     // Remove prefix and decode from base64
     const base64 = encryptedData.replace(SEAL_PREFIX, '');
     const serialized = Buffer.from(base64, 'base64');
     
     // Deserialize and decrypt
-    const cipherText = seal.CipherText();
-    cipherText.load(sealContext, serialized);
+    const cipherText = new seal.Ciphertext();
+    (cipherText as any).load(sealContext, serialized);
     
     const decryptedPlainText = sealDecryptor.decrypt(cipherText);
-    const decodedArray = encoder.decode(decryptedPlainText);
+    const decodedArray = (encoder as any).decode(decryptedPlainText);
     
     // Convert Int32Array back to string
     const dataBytes = Buffer.from(decodedArray);
