@@ -225,8 +225,8 @@ VITE_GOOGLE_CLIENT_ID=your_google_client_id
 VITE_PACKAGE_ID=0x80290a4621d25a18c7d37cbc83dae3e85f05460ad13649b9f689100a2967e03a
 VITE_REGISTRY_ID=0x73ea10e7cfde7d60cfc5d712e4883f7845a7783a55c9be6183782cf971ae87de
 
-# Backend URL
-VITE_BACKEND_URL=https://qedi.onrender.com/health
+# Backend URL (base URL - health check available at /health endpoint)
+VITE_BACKEND_URL=https://qedi.onrender.com
 ```
 
 **Backend** (`backend/.env`):
