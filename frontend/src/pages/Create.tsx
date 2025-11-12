@@ -5,6 +5,8 @@ import { createProfileTransaction, addLinkTransaction } from '../lib/sui-client'
 import { BACKEND_URL } from '../lib/constants';
 import DarkVeil from '../components/DarkVeil';
 import DashboardLayout from '../components/Layouts/DashboardLayout';
+import type { PrivacySettings } from '../types/profile';
+import { uploadAvatarToWalrus } from '../lib/walrus';
 
 export default function Create() {
   const currentAccount = useCurrentAccount();
@@ -24,8 +26,15 @@ export default function Create() {
     theme: 'default',
     links: [] as Array<{ title: string; url: string; icon: string }>
   });
-  const [, setAvatarFile] = useState<File | null>(null);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string>('');
+  const [privacySettings, setPrivacySettings] = useState<PrivacySettings>({
+    show_bio: true,
+    show_links: true,
+    allow_anonymous: true,
+  });
+  const [isPrivate, setIsPrivate] = useState(false);
+  const [useWalrusAvatar, setUseWalrusAvatar] = useState(false);
 
   // Check if current wallet is an Enoki wallet (zkLogin)
   const connectedWallet = wallets.find(wallet => 
@@ -168,13 +177,45 @@ export default function Create() {
         alert(`Username must be between 3-20 characters. Current: ${formData.username.length} characters`);
         return;
       }
+
+      // Handle Walrus avatar upload if selected
+      let finalAvatarUrl = formData.avatarUrl;
+      let walrusAvatarHash = '';
+      if (useWalrusAvatar && avatarFile) {
+        try {
+          console.log('Uploading avatar to Walrus...');
+          const walrusResult = await uploadAvatarToWalrus(avatarFile);
+          finalAvatarUrl = walrusResult.url;
+          walrusAvatarHash = walrusResult.hash;
+          console.log('Avatar uploaded to Walrus:', walrusResult);
+        } catch (error) {
+          console.error('Walrus upload failed, using regular URL:', error);
+          // Continue with regular avatar URL
+        }
+      }
+      
+      // Get zkLogin info if Enoki wallet is connected
+      let zkLoginProvider = '';
+      let zkLoginSub = '';
+      if (isEnokiConnected && currentAccount) {
+        zkLoginProvider = 'Google'; // Enoki uses Google OAuth
+        zkLoginSub = currentAccount.label || currentAccount.address || ''; // Email or address as sub
+        console.log('zkLogin info:', { zkLoginProvider, zkLoginSub });
+      }
       
       const profileTx = createProfileTransaction(
         formData.username,
         formData.displayName,
         formData.bio,
-        formData.avatarUrl,
-        formData.theme
+        finalAvatarUrl,
+        formData.theme,
+        isPrivate,
+        privacySettings.show_bio,
+        privacySettings.show_links,
+        privacySettings.allow_anonymous,
+        walrusAvatarHash,
+        zkLoginProvider,
+        zkLoginSub
       );
 
       // Check if we need to use sponsored transactions for Enoki wallet
@@ -194,8 +235,15 @@ export default function Create() {
               username: formData.username,
               displayName: formData.displayName,
               bio: formData.bio,
-              avatarUrl: formData.avatarUrl,
+              avatarUrl: finalAvatarUrl,
               theme: formData.theme,
+              // Privacy fields (optional, backward compatible)
+              isPrivate: isPrivate,
+              privacySettings: privacySettings,
+              walrusAvatarHash: walrusAvatarHash || undefined,
+              // zkLogin fields
+              zkLoginProvider: zkLoginProvider,
+              zkLoginSub: zkLoginSub,
             }),
           });
 
@@ -262,8 +310,9 @@ export default function Create() {
           setTimeout(() => setShowErrorToast(false), 5000);
         }
       } else {
-        console.log('Using regular wallet transaction...');
+        console.log('Using regular wallet transaction with privacy settings...');
         
+        // Regular wallet transactions now support privacy fields
         // Use regular wallet transaction
         signAndExecuteTransaction(
           {
@@ -681,7 +730,89 @@ export default function Create() {
 
             {step === 3 && (
               <div className="space-y-6">
-                <h3 className="text-2xl font-bold text-white mb-6">Review & Create</h3>
+                <h3 className="text-2xl font-bold text-white mb-6">Privacy & Review</h3>
+                
+                {/* Privacy Settings Section */}
+                <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20 mb-6">
+                  <h4 className="text-lg font-semibold text-white mb-4">Privacy Settings</h4>
+                  
+                  {/* Private/Public Toggle */}
+                  <div className="mb-4">
+                    <label className="flex items-center justify-between cursor-pointer">
+                      <div>
+                        <span className="text-white font-medium">Private Profile</span>
+                        <p className="text-gray-300 text-sm mt-1">
+                          Make your profile private (only visible to you by default)
+                        </p>
+                      </div>
+                      <input
+                        type="checkbox"
+                        checked={isPrivate}
+                        onChange={(e) => setIsPrivate(e.target.checked)}
+                        className="w-12 h-6 rounded-full bg-gray-600 appearance-none cursor-pointer relative transition-colors duration-200 checked:bg-blue-600"
+                        style={{
+                          background: isPrivate ? '#2563eb' : '#4b5563',
+                        }}
+                      />
+                    </label>
+                  </div>
+
+                  {/* Privacy Options */}
+                  <div className="space-y-3">
+                    <label className="flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={privacySettings.show_bio}
+                        onChange={(e) =>
+                          setPrivacySettings({ ...privacySettings, show_bio: e.target.checked })
+                        }
+                        className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      />
+                      <span className="ml-3 text-white">Show Bio</span>
+                    </label>
+
+                    <label className="flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={privacySettings.show_links}
+                        onChange={(e) =>
+                          setPrivacySettings({ ...privacySettings, show_links: e.target.checked })
+                        }
+                        className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      />
+                      <span className="ml-3 text-white">Show Links</span>
+                    </label>
+
+                    <label className="flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={privacySettings.allow_anonymous}
+                        onChange={(e) =>
+                          setPrivacySettings({ ...privacySettings, allow_anonymous: e.target.checked })
+                        }
+                        className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      />
+                      <span className="ml-3 text-white">Allow Anonymous Viewing</span>
+                      <span className="ml-2 text-gray-400 text-sm">(if private)</span>
+                    </label>
+                  </div>
+
+                  {/* Walrus Avatar Option */}
+                  {avatarFile && (
+                    <div className="mt-4 pt-4 border-t border-white/10">
+                      <label className="flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={useWalrusAvatar}
+                          onChange={(e) => setUseWalrusAvatar(e.target.checked)}
+                          className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        />
+                        <span className="ml-3 text-white">Upload Avatar to Walrus (Verifiable Storage)</span>
+                        <span className="ml-2 text-gray-400 text-sm">(Recommended for security)</span>
+                      </label>
+                    </div>
+                  )}
+                </div>
                 
                 <div className="bg-gray-700/30 rounded-xl p-6 border border-gray-600/30">
                   <h4 className="text-lg font-semibold text-white mb-4">Profile Preview</h4>

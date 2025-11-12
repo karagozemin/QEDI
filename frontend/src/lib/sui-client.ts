@@ -1,6 +1,6 @@
 import { SuiClient } from '@mysten/sui/client';
 import { Transaction } from '@mysten/sui/transactions';
-import { PACKAGE_ID, REGISTRY_ID, NETWORK } from './constants';
+import { PACKAGE_ID, REGISTRY_ID, NETWORK, OLD_PACKAGE_IDS, OLD_REGISTRY_IDS } from './constants';
 // import { executeSponsoredTransaction } from './enoki'; // Temporarily disabled
 
 // Initialize Sui client
@@ -16,7 +16,14 @@ export function createProfileTransaction(
   displayName: string,
   bio: string,
   avatarUrl: string,
-  theme: string = 'default'
+  theme: string = 'default',
+  isPrivate: boolean = false,
+  showBio: boolean = true,
+  showLinks: boolean = true,
+  allowAnonymous: boolean = true,
+  walrusAvatarHash: string = '',
+  zkLoginProvider: string = '',
+  zkLoginSub: string = ''
 ) {
   const tx = new Transaction();
   
@@ -29,6 +36,13 @@ export function createProfileTransaction(
       tx.pure.string(bio),
       tx.pure.string(avatarUrl),
       tx.pure.string(theme),
+      tx.pure.bool(isPrivate),
+      tx.pure.bool(showBio),
+      tx.pure.bool(showLinks),
+      tx.pure.bool(allowAnonymous),
+      tx.pure.string(walrusAvatarHash),
+      tx.pure.string(zkLoginProvider),
+      tx.pure.string(zkLoginSub),
       tx.object('0x6'), // Clock object ID
     ],
   });
@@ -108,60 +122,40 @@ export function updateProfileTransaction(
   return tx;
 }
 
-// Get profile by username - Registry bug is now FIXED!
-export async function getProfileByUsername(username: string) {
+// Helper function to search for username in a specific registry
+async function searchUsernameInRegistry(username: string, registryId: string): Promise<string | null> {
   try {
-    console.log('=== PROFILE LOOKUP DEBUG ===');
-    console.log('Looking for username:', username);
-    console.log('Registry ID:', REGISTRY_ID);
+    console.log(`Searching in registry: ${registryId}`);
 
-    // Get registry object to check if it exists
+    // Get registry object
     const registryResult = await suiClient.getObject({
-      id: REGISTRY_ID,
+      id: registryId,
       options: {
         showContent: true,
         showType: true,
       },
     });
 
-    console.log('Registry result:', registryResult);
-
-    if (!registryResult.data?.content) {
-      console.log('Registry not found or has no content');
+    if (!registryResult.data?.content || !('fields' in registryResult.data.content)) {
+      console.log(`Registry ${registryId} not found or invalid`);
       return null;
     }
 
-    // Get the usernames table ID from registry
-    if (!('fields' in registryResult.data.content)) {
-      console.log('Registry content has no fields');
-      return null;
-    }
     const registryFields = registryResult.data.content.fields as any;
     const usernamesTableId = registryFields.usernames.fields.id.id;
-    console.log('Usernames table ID:', usernamesTableId);
 
-    // Get dynamic fields from usernames table (username -> profile_id mappings)
-    console.log('Fetching dynamic fields from usernames table...');
+    // Get dynamic fields from usernames table
     const dynamicFields = await suiClient.getDynamicFields({
       parentId: usernamesTableId,
     });
 
-    console.log('Dynamic fields:', dynamicFields);
-
     if (!dynamicFields.data || dynamicFields.data.length === 0) {
-      console.log('No dynamic fields found in registry');
       return null;
     }
 
     // Look for the username in dynamic fields
-    let profileId = null;
     for (const field of dynamicFields.data) {
-      console.log('Checking field:', field);
-      
-      // The field name should contain the username
       if (field.name && field.name.value === username) {
-        // Get the field object directly using its object ID
-        console.log('Found matching field, getting object:', field.objectId);
         const fieldObject = await suiClient.getObject({
           id: field.objectId,
           options: {
@@ -169,19 +163,42 @@ export async function getProfileByUsername(username: string) {
           },
         });
         
-        console.log('Field object for username:', fieldObject);
-        
         if (fieldObject.data?.content && 'fields' in fieldObject.data.content) {
           const fields = fieldObject.data.content.fields as any;
-          profileId = fields.value;
-          console.log('Found profile ID:', profileId);
-          break;
+          console.log(`✅ Found username "${username}" in registry ${registryId}`);
+          return fields.value; // Return profile ID
         }
       }
     }
 
+    return null;
+  } catch (error) {
+    console.error(`Error searching registry ${registryId}:`, error);
+    return null;
+  }
+}
+
+// Get profile by username - Supports multiple registries for backward compatibility
+export async function getProfileByUsername(username: string) {
+  try {
+    console.log('=== PROFILE LOOKUP DEBUG ===');
+    console.log('Looking for username:', username);
+
+    // Search in current registry first
+    console.log('Searching in CURRENT registry...');
+    let profileId = await searchUsernameInRegistry(username, REGISTRY_ID);
+
+    // If not found, search in old registries
     if (!profileId) {
-      console.log('Profile ID not found for username:', username);
+      console.log('Not found in current registry, searching in OLD registries...');
+      for (const oldRegistryId of OLD_REGISTRY_IDS) {
+        profileId = await searchUsernameInRegistry(username, oldRegistryId);
+        if (profileId) break;
+      }
+    }
+
+    if (!profileId) {
+      console.log('❌ Profile ID not found for username:', username);
       return null;
     }
 
@@ -222,10 +239,13 @@ export async function getProfileById(profileId: string) {
   }
 }
 
-// Get user's profiles
+// Get user's profiles (supporting all contract versions)
 export async function getUserProfiles(userAddress: string) {
   try {
-    const result = await suiClient.getOwnedObjects({
+    console.log('Fetching profiles for address:', userAddress);
+    
+    // Fetch profiles with current package ID
+    const currentResult = await suiClient.getOwnedObjects({
       owner: userAddress,
       filter: {
         StructType: `${PACKAGE_ID}::linktree::LinkTreeProfile`,
@@ -236,7 +256,39 @@ export async function getUserProfiles(userAddress: string) {
       },
     });
 
-    return result.data;
+    console.log('Current package profiles:', currentResult.data.length);
+
+    // Fetch profiles from all old package IDs
+    const oldResults = await Promise.all(
+      OLD_PACKAGE_IDS.map(oldPackageId => 
+        suiClient.getOwnedObjects({
+          owner: userAddress,
+          filter: {
+            StructType: `${oldPackageId}::linktree::LinkTreeProfile`,
+          },
+          options: {
+            showContent: true,
+            showType: true,
+          },
+        })
+      )
+    );
+
+    // Combine all results
+    const allProfiles = [
+      ...currentResult.data,
+      ...oldResults.flatMap(result => result.data)
+    ];
+
+    console.log('Total profiles found (all versions):', allProfiles.length);
+
+    // Remove duplicates by objectId
+    const uniqueProfiles = allProfiles.filter((profile, index, self) => 
+      index === self.findIndex((p) => p.data?.objectId === profile.data?.objectId)
+    );
+    
+    console.log('Unique profiles:', uniqueProfiles.length);
+    return uniqueProfiles;
   } catch (error) {
     console.error('Error fetching user profiles:', error);
     return [];

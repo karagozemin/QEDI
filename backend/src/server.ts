@@ -5,6 +5,10 @@ import { EnokiClient } from '@mysten/enoki';
 import { SuiClient, getFullnodeUrl } from '@mysten/sui/client';
 import { Transaction } from '@mysten/sui/transactions';
 import { toBase64 } from '@mysten/sui/utils';
+import multer from 'multer';
+import { detectSpamLink, validateLink, calculateFraudScore } from './fraud-detection';
+import { encryptData, decryptData, checkPrivacyAccess, filterProfileData } from './privacy';
+import { uploadAvatarToWalrus, getWalrusUrl } from './walrus-upload';
 
 dotenv.config();
 
@@ -31,6 +35,13 @@ app.use(cors({
   credentials: true
 }));
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Configure multer for file uploads
+const upload = multer({ 
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit
+});
 
 // Request logging middleware
 app.use((req, res, next) => {
@@ -58,11 +69,19 @@ app.post('/api/create-profile', async (req, res) => {
       displayName, 
       bio, 
       avatarUrl, 
-      theme 
+      theme,
+      // Privacy fields (optional, backward compatible)
+      isPrivate,
+      privacySettings,
+      walrusAvatarHash,
+      encryptedBio,
+      // zkLogin fields (optional)
+      zkLoginProvider,
+      zkLoginSub
     } = req.body;
 
     console.log('Creating profile for:', sender);
-    console.log('Profile data:', { username, displayName, bio, theme });
+    console.log('Profile data:', { username, displayName, bio, theme, isPrivate, zkLoginProvider });
 
     // Validate required fields
     if (!sender || !username || !displayName) {
@@ -70,6 +89,24 @@ app.post('/api/create-profile', async (req, res) => {
         error: 'Missing required fields: sender, username, displayName' 
       });
     }
+
+    // Fraud detection on links if provided (for future batch creation)
+    // This is handled separately when links are added
+
+    // Parse privacy settings with defaults
+    const isPri = isPrivate === true || isPrivate === 'true';
+    const privSettings = privacySettings || {};
+    const showBio = privSettings.show_bio !== false && privSettings.show_bio !== 'false';
+    const showLinks = privSettings.show_links !== false && privSettings.show_links !== 'false';
+    const allowAnon = privSettings.allow_anonymous !== false && privSettings.allow_anonymous !== 'false';
+    const walrusHash = walrusAvatarHash || '';
+    
+    // Parse zkLogin fields
+    const zkProvider = zkLoginProvider || '';
+    const zkSub = zkLoginSub || '';
+
+    console.log('Privacy settings:', { isPri, showBio, showLinks, allowAnon, walrusHash });
+    console.log('zkLogin info:', { zkProvider, zkSub });
 
     // Create the transaction
     const tx = new Transaction();
@@ -82,6 +119,13 @@ app.post('/api/create-profile', async (req, res) => {
         tx.pure.string(bio || ''),
         tx.pure.string(avatarUrl || ''),
         tx.pure.string(theme || 'default'),
+        tx.pure.bool(isPri),
+        tx.pure.bool(showBio),
+        tx.pure.bool(showLinks),
+        tx.pure.bool(allowAnon),
+        tx.pure.string(walrusHash),
+        tx.pure.string(zkProvider),
+        tx.pure.string(zkSub),
         tx.object('0x6') // Clock object
       ],
     });
@@ -154,6 +198,23 @@ app.post('/api/add-link', async (req, res) => {
       sender: `${sender.slice(0, 8)}...${sender.slice(-4)}`
     });
 
+    // Fraud detection
+    const linkValidation = validateLink(url);
+    if (!linkValidation.valid) {
+      return res.status(400).json({
+        error: 'Invalid link',
+        reason: linkValidation.reason,
+        fraudDetected: detectSpamLink(url)
+      });
+    }
+
+    const isSpam = detectSpamLink(url);
+    if (isSpam) {
+      console.warn('⚠️ Spam link detected:', url);
+      // Still allow but warn (user can override)
+      // In production, you might want to block or require admin approval
+    }
+
     // Create the add link transaction
     const tx = new Transaction();
     tx.moveCall({
@@ -194,7 +255,8 @@ app.post('/api/add-link', async (req, res) => {
 
     res.json({ 
       digest: sponsored.digest,
-      bytes: sponsored.bytes 
+      bytes: sponsored.bytes,
+      fraudWarning: isSpam ? 'This link appears to be spam. Please verify before adding.' : undefined
     });
 
   } catch (error) {
@@ -240,6 +302,29 @@ app.post('/api/add-multiple-links', async (req, res) => {
       });
     }
 
+    // Batch fraud detection
+    const validationResults = links.map((link: { title: string; url: string; icon: string }) => ({
+      title: link.title,
+      url: link.url,
+      validation: validateLink(link.url),
+      isSpam: detectSpamLink(link.url)
+    }));
+
+    const invalidLinks = validationResults.filter(r => !r.validation.valid);
+    const spamLinks = validationResults.filter(r => r.isSpam);
+
+    if (invalidLinks.length > 0) {
+      return res.status(400).json({
+        error: 'Some links are invalid',
+        invalidLinks: invalidLinks.map(l => ({ url: l.url, reason: l.validation.reason }))
+      });
+    }
+
+    if (spamLinks.length > 0) {
+      console.warn('⚠️ Spam links detected in batch:', spamLinks.map(l => l.url));
+      // Warn but continue (user can override)
+    }
+
     // Create PTB with multiple add_link calls
     const tx = new Transaction();
     
@@ -282,7 +367,9 @@ app.post('/api/add-multiple-links', async (req, res) => {
 
     res.json({ 
       digest: sponsored.digest,
-      bytes: sponsored.bytes 
+      bytes: sponsored.bytes,
+      validationResults,
+      spamWarnings: spamLinks.length > 0 ? `Warning: ${spamLinks.length} link(s) appear to be spam.` : undefined
     });
 
   } catch (error) {
@@ -393,6 +480,234 @@ app.post('/api/track-click', async (req, res) => {
     
     res.status(500).json({ 
       error: 'Failed to track click',
+      details: error instanceof Error ? error.message : String(error)
+    });
+  }
+});
+
+// ===== Privacy & Security Endpoints =====
+
+// Upload Avatar to Walrus
+app.post('/api/upload-avatar-walrus', upload.single('avatar'), async (req: express.Request, res: express.Response) => {
+  try {
+    const uploadedFile = (req as any).file;
+    if (!uploadedFile) {
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+
+    console.log('Uploading avatar to Walrus:', {
+      filename: uploadedFile.originalname,
+      size: uploadedFile.size
+    });
+
+    const result = await uploadAvatarToWalrus(uploadedFile.buffer, uploadedFile.originalname);
+
+    res.json({
+      hash: result.hash,
+      blobId: result.blobId,
+      url: result.url || getWalrusUrl(result.blobId)
+    });
+
+  } catch (error) {
+    console.error('Walrus upload failed:', error);
+    res.status(500).json({
+      error: 'Failed to upload to Walrus',
+      details: error instanceof Error ? error.message : String(error)
+    });
+  }
+});
+
+// Encrypt Bio
+app.post('/api/encrypt-bio', async (req, res) => {
+  try {
+    const { bio, key } = req.body;
+
+    if (!bio) {
+      return res.status(400).json({ error: 'Missing required field: bio' });
+    }
+
+    const encrypted = encryptData(bio, key);
+
+    res.json({ encrypted });
+  } catch (error) {
+    console.error('Encryption failed:', error);
+    res.status(500).json({
+      error: 'Failed to encrypt bio',
+      details: error instanceof Error ? error.message : String(error)
+    });
+  }
+});
+
+// Check Fraud
+app.post('/api/check-fraud', async (req, res) => {
+  try {
+    const { url, profile } = req.body;
+
+    if (url) {
+      const validation = validateLink(url);
+      const isSpam = detectSpamLink(url);
+      
+      return res.json({
+        url,
+        valid: validation.valid,
+        reason: validation.reason,
+        isSpam,
+        recommendation: isSpam ? 'Consider using a different URL' : 'URL looks safe'
+      });
+    }
+
+    if (profile) {
+      const fraudScore = calculateFraudScore(profile);
+      const shouldFlag = fraudScore >= 30;
+
+      return res.json({
+        fraudScore,
+        shouldFlag,
+        riskLevel: fraudScore < 20 ? 'low' : fraudScore < 50 ? 'medium' : 'high',
+        recommendation: shouldFlag ? 'Profile should be reviewed by admin' : 'Profile looks safe'
+      });
+    }
+
+    return res.status(400).json({ error: 'Missing required field: url or profile' });
+  } catch (error) {
+    console.error('Fraud check failed:', error);
+    res.status(500).json({
+      error: 'Failed to check fraud',
+      details: error instanceof Error ? error.message : String(error)
+    });
+  }
+});
+
+// Update Privacy Settings
+app.post('/api/update-privacy', async (req, res) => {
+  try {
+    const { profileId, isPrivate, privacySettings, sender } = req.body;
+
+    if (!profileId || !sender) {
+      return res.status(400).json({ 
+        error: 'Missing required fields: profileId, sender' 
+      });
+    }
+
+    // Create transaction to update privacy settings
+    const tx = new Transaction();
+    tx.moveCall({
+      target: `${process.env.PACKAGE_ID}::linktree::set_privacy_settings`,
+      arguments: [
+        tx.object(profileId),
+        tx.pure.bool(isPrivate || false),
+        tx.pure.bool(privacySettings?.show_bio !== false),
+        tx.pure.bool(privacySettings?.show_links !== false),
+        tx.pure.bool(privacySettings?.allow_anonymous !== false),
+        tx.object('0x6'), // Clock object
+      ],
+    });
+
+    tx.setSender(sender);
+
+    const txBytes = await tx.build({
+      client: suiClient,
+      onlyTransactionKind: true,
+    });
+
+    const sponsored = await enokiClient.createSponsoredTransaction({
+      transactionKindBytes: toBase64(txBytes),
+      network: (process.env.SUI_NETWORK as any) || 'testnet',
+      sender: sender,
+      allowedMoveCallTargets: [`${process.env.PACKAGE_ID}::linktree::set_privacy_settings`],
+      allowedAddresses: [sender]
+    });
+
+    res.json({
+      digest: sponsored.digest,
+      bytes: sponsored.bytes
+    });
+
+  } catch (error) {
+    console.error('Update privacy failed:', error);
+    res.status(500).json({
+      error: 'Failed to update privacy settings',
+      details: error instanceof Error ? error.message : String(error)
+    });
+  }
+});
+
+// Delete Profile Data (GDPR Compliance)
+app.delete('/api/delete-profile-data', async (req, res) => {
+  try {
+    const { profileId, sender } = req.body;
+
+    if (!profileId || !sender) {
+      return res.status(400).json({ 
+        error: 'Missing required fields: profileId, sender' 
+      });
+    }
+
+    // Note: On-chain data cannot be truly deleted, but we can:
+    // 1. Mark profile as deleted (update bio/display_name to indicate deletion)
+    // 2. Clear sensitive data
+    // 3. Set privacy to maximum (private, no anonymous viewing)
+    
+    // For now, we'll update the profile to indicate deletion
+    // In production, you might want to add a `deleted` flag to the contract
+    
+    console.log('GDPR deletion request for profile:', profileId, 'by:', sender);
+
+    // Update profile to indicate deletion
+    const tx = new Transaction();
+    tx.moveCall({
+      target: `${process.env.PACKAGE_ID}::linktree::update_profile`,
+      arguments: [
+        tx.object(profileId),
+        tx.pure.string('[Deleted]'),
+        tx.pure.string(''),
+        tx.pure.string(''),
+        tx.pure.string('default'),
+        tx.object('0x6'),
+      ],
+    });
+
+    // Also set privacy to maximum
+    tx.moveCall({
+      target: `${process.env.PACKAGE_ID}::linktree::set_privacy_settings`,
+      arguments: [
+        tx.object(profileId),
+        tx.pure.bool(true), // Private
+        tx.pure.bool(false), // Don't show bio
+        tx.pure.bool(false), // Don't show links
+        tx.pure.bool(false), // No anonymous viewing
+        tx.object('0x6'),
+      ],
+    });
+
+    tx.setSender(sender);
+
+    const txBytes = await tx.build({
+      client: suiClient,
+      onlyTransactionKind: true,
+    });
+
+    const sponsored = await enokiClient.createSponsoredTransaction({
+      transactionKindBytes: toBase64(txBytes),
+      network: (process.env.SUI_NETWORK as any) || 'testnet',
+      sender: sender,
+      allowedMoveCallTargets: [
+        `${process.env.PACKAGE_ID}::linktree::update_profile`,
+        `${process.env.PACKAGE_ID}::linktree::set_privacy_settings`
+      ],
+      allowedAddresses: [sender]
+    });
+
+    res.json({
+      digest: sponsored.digest,
+      bytes: sponsored.bytes,
+      message: 'Profile data marked for deletion. On-chain data cannot be fully deleted, but sensitive information has been cleared.'
+    });
+
+  } catch (error) {
+    console.error('Delete profile data failed:', error);
+    res.status(500).json({
+      error: 'Failed to delete profile data',
       details: error instanceof Error ? error.message : String(error)
     });
   }

@@ -14,6 +14,7 @@ module qedi::linktree {
     const EProfileNotFound: u64 = 4;
     const EInvalidLinkIndex: u64 = 5;
     const EMaxLinksReached: u64 = 6;
+    const EPrivateProfile: u64 = 7;
 
     // ===== Constants =====
     const MAX_LINKS: u64 = 50;
@@ -30,6 +31,13 @@ module qedi::linktree {
         is_active: bool,
         click_count: u64,
         created_at: u64,
+    }
+
+    /// Privacy settings for profile
+    public struct PrivacySettings has store, copy, drop {
+        show_bio: bool,
+        show_links: bool,
+        allow_anonymous: bool,
     }
 
     /// Main profile object - owned by user
@@ -51,6 +59,12 @@ module qedi::linktree {
         // zkLogin integration
         zklogin_provider: String,
         zklogin_sub: String,
+        // Privacy & Security features (backward compatible defaults)
+        is_private: bool,
+        encrypted_bio: String,
+        privacy_settings: PrivacySettings,
+        walrus_avatar_hash: String,
+        fraud_score: u8,
     }
 
     /// Global registry for username -> profile mapping
@@ -103,6 +117,20 @@ module qedi::linktree {
         linked_at: u64,
     }
 
+    public struct PrivacyUpdated has copy, drop {
+        profile_id: ID,
+        owner: address,
+        is_private: bool,
+        updated_at: u64,
+    }
+
+    public struct FraudScoreUpdated has copy, drop {
+        profile_id: ID,
+        old_score: u8,
+        new_score: u8,
+        updated_at: u64,
+    }
+
     // ===== Init Function =====
 
     /// Initialize the module - create global registry
@@ -150,6 +178,13 @@ module qedi::linktree {
         bio: String,
         avatar_url: String,
         theme: String,
+        is_private: bool,
+        show_bio: bool,
+        show_links: bool,
+        allow_anonymous: bool,
+        walrus_avatar_hash: String,
+        zklogin_provider: String,
+        zklogin_sub: String,
         clock: &Clock,
         ctx: &mut TxContext
     ) {
@@ -161,7 +196,7 @@ module qedi::linktree {
         let profile_id = object::new(ctx);
         let profile_id_copy = object::uid_to_inner(&profile_id);
 
-        // Create profile
+        // Create profile with provided privacy and zkLogin settings
         let profile = LinkTreeProfile {
             id: profile_id,
             owner: tx_context::sender(ctx),
@@ -176,8 +211,18 @@ module qedi::linktree {
             created_at: current_time,
             updated_at: current_time,
             sui_domain: string::utf8(b""),
-            zklogin_provider: string::utf8(b""),
-            zklogin_sub: string::utf8(b""),
+            zklogin_provider,
+            zklogin_sub,
+            // Privacy settings from parameters
+            is_private,
+            encrypted_bio: string::utf8(b""),
+            privacy_settings: PrivacySettings {
+                show_bio,
+                show_links,
+                allow_anonymous,
+            },
+            walrus_avatar_hash,
+            fraud_score: 0,
         };
 
         // Register username
@@ -378,6 +423,81 @@ module qedi::linktree {
         profile.updated_at = clock::timestamp_ms(clock);
     }
 
+    // ===== Privacy & Security Management =====
+
+    /// Set privacy settings for profile
+    public fun set_privacy_settings(
+        profile: &mut LinkTreeProfile,
+        is_private: bool,
+        show_bio: bool,
+        show_links: bool,
+        allow_anonymous: bool,
+        clock: &Clock,
+        ctx: &mut TxContext
+    ) {
+        assert!(profile.owner == tx_context::sender(ctx), ENotProfileOwner);
+
+        profile.is_private = is_private;
+        profile.privacy_settings = PrivacySettings {
+            show_bio,
+            show_links,
+            allow_anonymous,
+        };
+        profile.updated_at = clock::timestamp_ms(clock);
+
+        event::emit(PrivacyUpdated {
+            profile_id: object::uid_to_inner(&profile.id),
+            owner: profile.owner,
+            is_private,
+            updated_at: profile.updated_at,
+        });
+    }
+
+    /// Store encrypted bio (encrypted on backend with Seal)
+    public fun set_encrypted_bio(
+        profile: &mut LinkTreeProfile,
+        encrypted_bio: String,
+        clock: &Clock,
+        ctx: &mut TxContext
+    ) {
+        assert!(profile.owner == tx_context::sender(ctx), ENotProfileOwner);
+
+        profile.encrypted_bio = encrypted_bio;
+        profile.updated_at = clock::timestamp_ms(clock);
+    }
+
+    /// Set Walrus avatar hash for verifiable storage
+    public fun set_walrus_avatar(
+        profile: &mut LinkTreeProfile,
+        walrus_hash: String,
+        clock: &Clock,
+        ctx: &mut TxContext
+    ) {
+        assert!(profile.owner == tx_context::sender(ctx), ENotProfileOwner);
+
+        profile.walrus_avatar_hash = walrus_hash;
+        profile.updated_at = clock::timestamp_ms(clock);
+    }
+
+    /// Update fraud score (admin only)
+    public fun update_fraud_score(
+        _: &AdminCap,
+        profile: &mut LinkTreeProfile,
+        new_score: u8,
+        clock: &Clock,
+    ) {
+        let old_score = profile.fraud_score;
+        profile.fraud_score = new_score;
+        profile.updated_at = clock::timestamp_ms(clock);
+
+        event::emit(FraudScoreUpdated {
+            profile_id: object::uid_to_inner(&profile.id),
+            old_score,
+            new_score,
+            updated_at: profile.updated_at,
+        });
+    }
+
     // ===== View Functions =====
 
     /// Get profile by username
@@ -392,9 +512,9 @@ module qedi::linktree {
         }
     }
 
-    /// Get profile information
+    /// Get profile information (includes privacy fields)
     public fun get_profile_info(profile: &LinkTreeProfile): (
-        address, String, String, String, String, String, u64, bool, u64, u64, String
+        address, String, String, String, String, String, u64, bool, u64, u64, String, bool, String, String, u8
     ) {
         (
             profile.owner,
@@ -407,8 +527,31 @@ module qedi::linktree {
             profile.is_verified,
             profile.total_clicks,
             profile.created_at,
-            profile.sui_domain
+            profile.sui_domain,
+            profile.is_private,
+            profile.walrus_avatar_hash,
+            profile.encrypted_bio,
+            profile.fraud_score
         )
+    }
+
+    /// Check if viewer can access profile (privacy check)
+    public fun can_view_profile(profile: &LinkTreeProfile, viewer: address): bool {
+        // Owner can always view
+        if (profile.owner == viewer) {
+            return true
+        };
+        // Public profiles are viewable
+        if (!profile.is_private) {
+            return true
+        };
+        // Private profiles: check if anonymous viewing is allowed
+        profile.privacy_settings.allow_anonymous
+    }
+
+    /// Get privacy settings
+    public fun get_privacy_settings(profile: &LinkTreeProfile): PrivacySettings {
+        profile.privacy_settings
     }
 
     /// Get all links from profile

@@ -5,6 +5,9 @@ import { getUserProfiles, addMultipleLinksTransaction } from '../lib/sui-client'
 import { BACKEND_URL } from '../lib/constants';
 import DarkVeil from '../components/DarkVeil';
 import DashboardLayout from '../components/Layouts/DashboardLayout';
+import PrivacySettings from '../components/PrivacySettings';
+import { validateLink } from '../lib/fraud-detection';
+import type { PrivacySettings as PrivacySettingsType } from '../types/profile';
 
 export default function EditProfile() {
   const currentAccount = useCurrentAccount();
@@ -15,6 +18,8 @@ export default function EditProfile() {
   const [selectedProfile, setSelectedProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [showPrivacySettings, setShowPrivacySettings] = useState(false);
+  const [isUpdatingPrivacy, setIsUpdatingPrivacy] = useState(false);
   
   // Array to hold multiple links before saving
   const [pendingLinks, setPendingLinks] = useState<Array<{title: string; url: string; icon: string}>>([]);
@@ -48,11 +53,32 @@ export default function EditProfile() {
     }
   };
 
-  // Add link to pending list (not blockchain yet)
-  const handleAddLinkToPending = () => {
+  // Add link to pending list (not blockchain yet) with fraud detection
+  const handleAddLinkToPending = async () => {
     if (!newLink.title || !newLink.url) {
       alert('Please fill in all fields');
       return;
+    }
+
+    // Validate link
+    try {
+      const validation = await validateLink(newLink.url);
+      if (!validation.valid) {
+        alert(`Invalid link: ${validation.reason || 'Please check the URL'}`);
+        return;
+      }
+      
+      if (validation.isSpam) {
+        const confirm = window.confirm(
+          `⚠️ Warning: This link appears to be spam.\n\n${validation.recommendation || ''}\n\nDo you still want to add it?`
+        );
+        if (!confirm) {
+          return;
+        }
+      }
+    } catch (error) {
+      console.error('Link validation error:', error);
+      // Continue anyway if validation fails
     }
 
     setPendingLinks(prev => [...prev, { ...newLink }]);
@@ -62,6 +88,74 @@ export default function EditProfile() {
   // Remove link from pending list
   const handleRemovePending = (index: number) => {
     setPendingLinks(prev => prev.filter((_, i) => i !== index));
+  };
+
+  // Handle privacy settings update
+  const handleUpdatePrivacy = async (settings: { isPrivate: boolean; privacySettings: PrivacySettingsType }) => {
+    if (!selectedProfile || !currentAccount) {
+      alert('Please select a profile and connect your wallet');
+      return;
+    }
+
+    setIsUpdatingPrivacy(true);
+
+    try {
+      // Step 1: Create sponsored transaction
+      const createResponse = await fetch(`${BACKEND_URL}/api/update-privacy`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          profileId: selectedProfile.data.objectId,
+          isPrivate: settings.isPrivate,
+          privacySettings: settings.privacySettings,
+          sender: currentAccount.address,
+        }),
+      });
+
+      if (!createResponse.ok) {
+        const errorData = await createResponse.json();
+        throw new Error(`Backend error: ${errorData.error}`);
+      }
+
+      const { digest, bytes } = await createResponse.json();
+
+      // Step 2: Sign transaction
+      const { signature } = await signTransaction({
+        transaction: bytes
+      });
+
+      if (!signature) {
+        throw new Error('Failed to get signature');
+      }
+
+      // Step 3: Execute transaction
+      const executeResponse = await fetch(`${BACKEND_URL}/api/execute-transaction`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          digest,
+          signature,
+        }),
+      });
+
+      if (!executeResponse.ok) {
+        const errorData = await executeResponse.json();
+        throw new Error(`Execution error: ${errorData.error}`);
+      }
+
+      alert('Privacy settings updated successfully!');
+      setShowPrivacySettings(false);
+      loadProfiles(); // Reload to get updated data
+    } catch (error) {
+      console.error('Privacy update failed:', error);
+      alert(`Failed to update privacy settings: ${error instanceof Error ? error.message : String(error)}`);
+    } finally {
+      setIsUpdatingPrivacy(false);
+    }
   };
 
   // Save all pending links to blockchain in a single PTB transaction
@@ -119,8 +213,13 @@ export default function EditProfile() {
             throw new Error(`Backend error: ${errorData.error}`);
           }
 
-          const { digest, bytes } = await createResponse.json();
+          const { digest, bytes, spamWarnings } = await createResponse.json();
           console.log('✅ Batch sponsored transaction created:', { digest, bytesLength: bytes.length });
+          
+          // Show warnings if any
+          if (spamWarnings) {
+            alert(`⚠️ Warning: ${spamWarnings}\n\nYou can still proceed, but please verify your links.`);
+          }
 
           // Step 2: Sign the transaction bytes
           console.log('✍️ Step 2: Signing transaction...');
@@ -336,6 +435,34 @@ export default function EditProfile() {
                 <p className="text-gray-300"><span className="font-medium">Avatar:</span> {profileData?.avatar_url ? '✓' : '✗'}</p>
               </div>
             </div>
+          </div>
+
+          {/* Privacy Settings */}
+          <div className="bg-gradient-to-br from-gray-800/50 to-gray-700/30 backdrop-blur-xl rounded-3xl shadow-2xl border border-gray-600/30 p-8 mb-8">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-white">Privacy & Security</h2>
+              <button
+                onClick={() => setShowPrivacySettings(!showPrivacySettings)}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors"
+              >
+                {showPrivacySettings ? 'Hide Settings' : 'Manage Privacy'}
+              </button>
+            </div>
+            
+            {showPrivacySettings && (
+              <PrivacySettings
+                initialSettings={{
+                  isPrivate: profileData?.is_private === true || profileData?.is_private === 'true',
+                  privacySettings: profileData?.privacy_settings || {
+                    show_bio: true,
+                    show_links: true,
+                    allow_anonymous: true,
+                  },
+                }}
+                onSave={handleUpdatePrivacy}
+                isLoading={isUpdatingPrivacy}
+              />
+            )}
           </div>
 
           {/* Add Link Form */}

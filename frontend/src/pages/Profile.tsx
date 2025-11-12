@@ -1,5 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
+import { useCurrentAccount, useWallets } from '@mysten/dapp-kit';
+import { isEnokiWallet } from '@mysten/enoki';
 import { getProfileByUsername } from '../lib/sui-client';
 import SocialIcon from '../components/SocialIcon';
 import Galaxy from '../components/Galaxy';
@@ -7,13 +9,57 @@ import DonationModal from '../components/DonationModal';
 
 export default function Profile() {
   const { username } = useParams<{ username: string }>();
+  const currentAccount = useCurrentAccount();
+  const wallets = useWallets();
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
   const [showDonationModal, setShowDonationModal] = useState(false);
+  const [accessDenied, setAccessDenied] = useState(false);
+
+  // Check if CURRENT account is zkLogin (Enoki) user
+  const isZkLoginUser = currentAccount 
+    ? wallets.some((wallet) => 
+        isEnokiWallet(wallet) && wallet.accounts.some(acc => acc.address === currentAccount.address)
+      )
+    : false;
 
   // Get profile data early for memoization
-  const profileData = profile?.data?.content?.fields;
+  const profileData = profile?.data?.content && 'fields' in profile.data.content 
+    ? profile.data.content.fields 
+    : null;
+
+  // Filter profile data based on privacy settings
+  const filteredProfileData = useMemo(() => {
+    if (!profileData) return null;
+    
+    // Type guard for profileData as any to access fields
+    const data = profileData as any;
+    
+    const viewerAddress = currentAccount?.address || '';
+    const isOwner = data.owner === viewerAddress;
+    const privacySettings = data.privacy_settings || {};
+    
+    // Owner sees everything
+    if (isOwner) {
+      return data;
+    }
+    
+    // Filter based on privacy settings
+    const filtered: any = { ...data };
+    
+    // Filter bio
+    if (privacySettings.show_bio === false || privacySettings.show_bio === 'false') {
+      filtered.bio = '';
+    }
+    
+    // Filter links
+    if (privacySettings.show_links === false || privacySettings.show_links === 'false') {
+      filtered.links = [];
+    }
+    
+    return filtered;
+  }, [profileData, currentAccount?.address]);
 
   // Memoize modal to prevent unnecessary re-renders
   const donationModal = useMemo(() => (
@@ -22,14 +68,15 @@ export default function Profile() {
       onClose={() => setShowDonationModal(false)}
       profileOwner={profileData?.owner || ''}
       username={profileData?.username || ''}
+      isZkLoginUser={isZkLoginUser}
     />
-  ), [showDonationModal, profileData?.owner, profileData?.username]);
+  ), [showDonationModal, profileData?.owner, profileData?.username, isZkLoginUser]);
 
   useEffect(() => {
     if (username) {
       loadProfile();
     }
-  }, [username]);
+  }, [username, currentAccount?.address]);
 
   const loadProfile = async () => {
     if (!username) return;
@@ -54,7 +101,34 @@ export default function Profile() {
       }
 
       console.log('Profile loaded successfully:', profileResult);
+      
+      // Check privacy access
+      const profileData = profileResult?.data?.content && 'fields' in profileResult.data.content 
+        ? profileResult.data.content.fields 
+        : null;
+      if (profileData) {
+        // Type guard for profileData as any to access fields
+        const data = profileData as any;
+        const isPrivate = data.is_private === true || data.is_private === 'true';
+        const viewerAddress = currentAccount?.address || '';
+        const isOwner = data.owner === viewerAddress;
+        
+        if (isPrivate && !isOwner) {
+          const privacySettings = data.privacy_settings || {};
+          const allowAnonymous = privacySettings.allow_anonymous === true || privacySettings.allow_anonymous === 'true';
+          
+          if (!allowAnonymous) {
+            setAccessDenied(true);
+            setError('This profile is private and anonymous viewing is not allowed.');
+            setProfile(null);
+            setLoading(false);
+            return;
+          }
+        }
+      }
+      
       setProfile(profileResult);
+      setAccessDenied(false);
       
     } catch (err) {
       console.error('Error loading profile:', err);
@@ -111,25 +185,32 @@ export default function Profile() {
     );
   }
 
-  if (error || !profile) {
+  if (error || !profile || accessDenied) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-blue-900 flex items-center justify-center">
         <div className="text-center max-w-md mx-auto p-8">
           <div className="w-24 h-24 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
             <svg className="w-12 h-12 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={accessDenied ? "M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" : "M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"} />
             </svg>
           </div>
-          <h2 className="text-2xl font-bold text-white mb-4">Profile Not Found</h2>
+          <h2 className="text-2xl font-bold text-white mb-4">
+            {accessDenied ? 'Private Profile' : 'Profile Not Found'}
+          </h2>
           <p className="text-gray-300 mb-6">
-            The profile "@{username}" doesn't exist or hasn't been created yet.
+            {accessDenied 
+              ? 'This profile is private and anonymous viewing is not allowed.'
+              : `The profile "@${username}" doesn't exist or hasn't been created yet.`
+            }
           </p>
-          <a 
-            href="/create" 
-            className="inline-block px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-xl hover:shadow-xl hover:shadow-blue-500/25 transform hover:-translate-y-1 transition-all duration-300"
-          >
-            Create Your Profile
-          </a>
+          {!accessDenied && (
+            <a 
+              href="/create" 
+              className="inline-block px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-xl hover:shadow-xl hover:shadow-blue-500/25 transform hover:-translate-y-1 transition-all duration-300"
+            >
+              Create Your Profile
+            </a>
+          )}
         </div>
       </div>
     );
@@ -200,9 +281,9 @@ export default function Profile() {
               </div>
 
               {/* Bio */}
-              {profileData?.bio && (
+              {filteredProfileData?.bio && (
                 <p className="text-gray-200 text-lg max-w-md mx-auto leading-relaxed mb-8">
-                  {profileData.bio}
+                  {filteredProfileData.bio}
                 </p>
               )}
 
@@ -214,22 +295,25 @@ export default function Profile() {
                     <div className="text-xs text-gray-300 font-medium mt-1">Links</div>
                   </div>
                 </div>
-                <button
-                  onClick={() => setShowDonationModal(true)}
-                  className="w-36 h-20 flex items-center justify-center bg-gradient-to-r from-yellow-500/20 to-orange-500/20 rounded-xl backdrop-blur-sm border border-white/20 shadow-lg hover:shadow-yellow-500/25 hover:scale-105 transition-all duration-300"
-                  title="Send SUI Donation"
-                >
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-white">
-                      <svg className="w-8 h-8 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
+                {/* Only show donate button for non-zkLogin profiles */}
+                {!(filteredProfileData as any)?.zklogin_provider && (
+                  <button
+                    onClick={() => setShowDonationModal(true)}
+                    className="w-36 h-20 flex items-center justify-center bg-gradient-to-r from-yellow-500/20 to-orange-500/20 rounded-xl backdrop-blur-sm border border-white/20 shadow-lg hover:shadow-yellow-500/25 hover:scale-105 transition-all duration-300"
+                    title="Send SUI Donation"
+                  >
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-white">
+                        <svg className="w-8 h-8 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </div>
+                      <div className="text-xs text-gray-300 font-medium mt-1">
+                        Donate
+                      </div>
                     </div>
-                    <div className="text-xs text-gray-300 font-medium mt-1">
-                      Donate
-                    </div>
-                  </div>
-                </button>
+                  </button>
+                )}
                 <a 
                   href={`https://suiscan.xyz/testnet/object/${profile.data?.objectId}`}
                   target="_blank"
@@ -256,8 +340,8 @@ export default function Profile() {
           <div className="p-6 sm:p-8">
             
             <div className="space-y-4">
-              {profileData?.links && profileData.links.length > 0 ? (
-                profileData.links.map((link: any, index: number) => {
+              {filteredProfileData?.links && filteredProfileData.links.length > 0 ? (
+                filteredProfileData.links.map((link: any, index: number) => {
                   const linkData = link.fields || link;
                   
                   return (

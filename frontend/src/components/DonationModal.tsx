@@ -8,9 +8,10 @@ interface DonationModalProps {
   onClose: () => void;
   profileOwner: string;
   username: string;
+  isZkLoginUser?: boolean; // Current viewer is zkLogin user
 }
 
-const DonationModal = memo(({ isOpen, onClose, profileOwner, username }: DonationModalProps) => {
+const DonationModal = memo(({ isOpen, onClose, profileOwner, username, isZkLoginUser = false }: DonationModalProps) => {
   const donationInputRef = useRef<HTMLInputElement>(null);
   const { mutate: signAndExecute } = useSignAndExecuteTransaction();
 
@@ -80,6 +81,12 @@ const DonationModal = memo(({ isOpen, onClose, profileOwner, username }: Donatio
   };
 
   const handleDonate = async () => {
+    // Check if current user is zkLogin user
+    if (isZkLoginUser) {
+      showToast('zkLogin users cannot send donations yet. Please use a regular wallet.', 'error');
+      return;
+    }
+
     const donationAmount = donationInputRef.current?.value || '';
     
     if (!donationAmount || parseFloat(donationAmount) <= 0) {

@@ -7,6 +7,13 @@ export interface Link {
   enabled: boolean;
 }
 
+// Privacy settings structure
+export interface PrivacySettings {
+  show_bio: boolean;
+  show_links: boolean;
+  allow_anonymous: boolean;
+}
+
 // LinkTree Profile structure (matches Move struct)
 export interface LinkTreeProfile {
   id: string;
@@ -19,6 +26,12 @@ export interface LinkTreeProfile {
   links: Link[];
   created_at: number;
   updated_at: number;
+  // Privacy & Security fields (optional for backward compatibility)
+  is_private?: boolean;
+  encrypted_bio?: string;
+  privacy_settings?: PrivacySettings;
+  walrus_avatar_hash?: string;
+  fraud_score?: number;
 }
 
 // Theme types
