@@ -526,7 +526,8 @@ app.post('/api/encrypt-bio', async (req, res) => {
       return res.status(400).json({ error: 'Missing required field: bio' });
     }
 
-    const encrypted = encryptData(bio, key);
+    // Use async encryptData (supports Seal encryption)
+    const encrypted = await encryptData(bio, key);
 
     res.json({ encrypted });
   } catch (error) {
