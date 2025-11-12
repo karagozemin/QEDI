@@ -1,40 +1,101 @@
-# QEDI - On-Chain LinkTree Platform
+# QEDI - Privacy-First LinkTree on Sui
 
 <div align="center">
   <img src="frontend/public/logo.png" alt="QEDI Logo" width="120" height="120" />
+  
+  **The Web3 LinkTree with Enterprise-Grade Privacy & Security**
+  
+  [![Sui](https://img.shields.io/badge/Built%20on-Sui-6fbcf0)](https://sui.io)
+  [![Walrus](https://img.shields.io/badge/Hosted%20on-Walrus-ff6b6b)](https://walrus.space)
+  [![Seal](https://img.shields.io/badge/Encrypted-Seal%20SDK-4ecdc4)](https://github.com/microsoft/SEAL)
+  [![zkLogin](https://img.shields.io/badge/Auth-zkLogin-9b59b6)](https://docs.sui.io/concepts/cryptography/zklogin)
 </div>
 
-**The Web3 LinkTree with Web2 Simplicity**
+---
 
-A production-ready full-stack decentralized application for creating and managing LinkTree profiles on Sui blockchain. Features zkLogin authentication (Google sign-in), sponsored transactions (zero gas fees), batch operations (PTB), and decentralized hosting on Walrus Sites.
+## 🎯 Track: DATA SECURITY & PRIVACY
+
+QEDI is a **production-ready, privacy-first LinkTree platform** built on Sui blockchain, designed specifically for the **DATA SECURITY & PRIVACY** track. We've implemented cutting-edge cryptographic technologies and privacy-preserving mechanisms throughout the entire stack.
+
+### 🏆 Track Requirements - Fully Implemented
+
+| Requirement | Status | Technology |
+|------------|--------|------------|
+| **Walrus** | ✅ | Verifiable storage for avatars with hash verification |
+| **Seal SDK** | ✅ | Homomorphic encryption (BFV scheme) for bio data |
+| **Fraud Detection** | ✅ | Real-time spam detection and fraud scoring system |
+| **Zero-Knowledge Proofs** | ✅ | zkLogin authentication via Enoki (Google OAuth) |
+| **Verifiable Storage** | ✅ | Walrus integration with SHA-256 hash verification |
+| **Privacy Solutions** | ✅ | Granular privacy controls, GDPR compliance |
+| **Sui Stack** | ✅ | Move smart contracts, Sui blockchain |
+
+---
+
+## 🔐 Privacy & Security Features
+
+### 1. **Homomorphic Encryption (Seal SDK)**
+- Bio data encrypted using Microsoft SEAL (BFV scheme)
+- Zero-knowledge operations on encrypted data
+- Backward compatible with AES-256-CBC
+- Industry-leading cryptographic security
+
+### 2. **Zero-Knowledge Authentication (zkLogin)**
+- Sign in with Google - no wallet needed
+- Privacy-preserving authentication
+- No private key storage
+- Sponsored transactions (zero gas fees)
+
+### 3. **Verifiable Storage (Walrus)**
+- All avatars stored on decentralized Walrus network
+- SHA-256 hash verification on-chain
+- Immutable, censorship-resistant storage
+- Content-addressed blob storage
+
+### 4. **Fraud Detection System**
+- Real-time spam link detection
+- Multi-factor fraud scoring (0-100 scale)
+- URL validation and security checks
+- Automatic review flagging
+
+### 5. **Granular Privacy Controls**
+- Private/public profiles
+- Per-field visibility controls (bio, links)
+- Anonymous viewing options
+- Owner-only encrypted data access
+
+### 6. **GDPR Compliance**
+- Profile deletion endpoint
+- Privacy settings update
+- Data minimization principles
+- Access control enforcement
+
+---
 
 ## ✨ Key Features
 
 ### 🔐 Authentication & User Experience
 - **zkLogin Integration**: Sign in with Google - no wallet setup required
 - **Zero Gas Fees**: All transactions sponsored by backend via Enoki
-- **Batch Operations**: Add 10 links in 1 transaction using PTB (Programmable Transaction Blocks)
+- **Batch Operations**: Add 10 links in 1 transaction using PTB
 - **Beautiful UI**: Animated DarkVeil background with WebGL effects
 - **Mobile-First**: Fully responsive design optimized for all devices
 
 ### 🎨 Profile Management
 - **Custom Profiles**: Username, display name, bio, avatar, theme
-- **Batch Link Addition**: Add multiple social/web links at once (1 transaction)
+- **Encrypted Bio**: Optional Seal SDK encryption for sensitive data
+- **Batch Link Addition**: Add multiple social/web links at once
 - **On-Chain Storage**: Permanent, censorship-resistant data on Sui
 - **Username Registry**: Human-readable profile URLs
-- **SuiScan Integration**: Direct links to view profiles on blockchain explorer
+- **Privacy Settings**: Granular control over data visibility
 
 ### 🚀 Technical Excellence
 - **Walrus Sites Hosting**: Decentralized frontend deployment
 - **Smart Contract**: Production-ready Move contract on Sui
-- **Backend API**: Node.js backend handling sponsored transactions
+- **Backend API**: Node.js backend with privacy services
 - **Full TypeScript**: Type-safe codebase throughout
+- **Seal SDK**: Homomorphic encryption for sensitive data
 
-### 🎯 What Makes QEDI Different
-1. **Web2 UX, Web3 Security**: Google sign-in instead of complex wallet setup
-2. **Truly Gasless**: Users pay $0 - backend sponsors everything via Enoki
-3. **Batch Efficiency**: PTB technology enables multiple operations in single transaction
-4. **Production-Ready**: Deployed and working on testnet with Walrus Sites
+---
 
 ## 🏗 Architecture
 
@@ -49,58 +110,65 @@ QEDI/
 │   └── public/                   # Logo and static assets
 ├── backend/                       # Node.js + Express
 │   └── src/
-│       └── server.ts             # Sponsored transaction endpoints
+│       ├── server.ts             # Sponsored transaction endpoints
+│       ├── privacy.ts            # Seal SDK encryption, privacy controls
+│       ├── fraud-detection.ts    # Spam detection, fraud scoring
+│       └── walrus-upload.ts      # Verifiable storage uploads
 ├── move/                          # Sui Move Smart Contracts
 │   └── sources/
 │       └── linktree.move         # Profile, Link, Registry structs
 └── docs/                          # Documentation
+    ├── ARCHITECTURE.md           # Detailed architecture (this track)
     ├── SETUP.md
-    ├── TASKS.md
     └── CURRENT_STATUS.md
 ```
 
-### Smart Contract
-**Module**: `qedi::linktree`
-- `LinkTreeProfile`: username, display_name, bio, avatar_url, links[], theme
-- `Link`: title, url, icon, click_count
-- `UsernameRegistry`: Global username → profile_id mapping
+**See [ARCHITECTURE.md](./ARCHITECTURE.md) for detailed technical documentation.**
 
-**Key Functions**:
-- `create_profile`: Create new profile with username
-- `add_link`: Add link to profile (supports batching via PTB)
-- `update_profile`: Update profile metadata
-- `click_link`: Track link clicks on-chain
+---
 
 ## 🚀 Live Deployment
 
 ### Frontend - Walrus Sites
 - **Status**: ✅ Live on Walrus testnet
+- **URL**: `https://qedi.trwal.app`
 - **Hosting**: Decentralized, censorship-resistant
 - **Performance**: Global CDN via Walrus network
-- **Updates**: Immutable blob storage with versioning
+- **Privacy**: No server-side tracking, client-side only
 
-### Backend - Sponsored Transactions
-- **Status**: ✅ Running on testnet
+### Backend - Privacy Services
+- **Status**: ✅ Running on Render
+- **URL**: `https://qedi.onrender.com`
 - **Endpoints**: 
   - `/api/create-profile` - Sponsored profile creation
-  - `/api/add-link` - Sponsored single link
-  - `/api/add-multiple-links` - Sponsored batch links (NEW)
-  - `/api/execute-transaction` - Execute signed transaction
+  - `/api/encrypt-bio` - Seal SDK encryption
+  - `/api/check-fraud` - Fraud detection
+  - `/api/upload-avatar` - Walrus upload with hash
+  - `/api/delete-profile-data` - GDPR compliance
 - **Gas Sponsorship**: Powered by Enoki SDK
 
 ### Smart Contract
 - **Network**: Sui Testnet
-- **Package ID**: `0xb2d7a68d8711ceac4a5ee6c7fbec61456083d6ff20858b6d38f86c9922d02673`
-- **Registry ID**: `0x6b879e03c806815ea844dcebcd44447250c8b9cdc9c7553d3443dfb00cc2ce77`
+- **Package ID**: `0x80290a4621d25a18c7d37cbc83dae3e85f05460ad13649b9f689100a2967e03a`
+- **Registry ID**: `0x73ea10e7cfde7d60cfc5d712e4883f7845a7783a55c9be6183782cf971ae87de`
 - **Status**: ✅ Deployed and verified
+
+---
 
 ## 🛠 Technology Stack
 
 ### Blockchain & Infrastructure
 - **Sui Blockchain** - High-performance L1 with Move language
 - **Walrus Sites** - Decentralized hosting for frontend
+- **Walrus Storage** - Verifiable storage for avatars
 - **Enoki SDK** - zkLogin authentication + sponsored transactions
 - **PTB (Programmable Transaction Blocks)** - Batch operations
+
+### Privacy & Security
+- **Seal SDK** - Homomorphic encryption (BFV scheme)
+- **zkLogin** - Zero-knowledge authentication
+- **SHA-256** - Hash verification for data integrity
+- **Fraud Detection** - Real-time spam and fraud prevention
 
 ### Frontend
 - **React 18** + **TypeScript** - Modern, type-safe development
@@ -111,44 +179,13 @@ QEDI/
 - **React Router** - Client-side routing
 
 ### Backend
-- **Node.js** + **Express** - Sponsored transaction server
+- **Node.js** + **Express** - Privacy services server
 - **TypeScript** - Type-safe backend code
 - **@mysten/sui** - Sui SDK for transaction building
 - **Enoki** - Gas sponsorship via Enoki API
+- **node-seal** - Microsoft SEAL for homomorphic encryption
 
-## 🧪 Testing
-
-### Smart Contract Test Suite
-- **20 comprehensive tests** covering all contract functionality
-- **Test Coverage**:
-  - ✅ Profile creation, update, and authorization
-  - ✅ Link management (add, update, remove, reorder)
-  - ✅ Batch operations (PTB simulation)
-  - ✅ Username registry and lookups
-  - ✅ SuiNS domain integration
-  - ✅ Admin functions (verify, emergency transfer)
-  - ✅ zkLogin integration
-  - ✅ Click tracking and analytics
-- **Edge Cases**: Username validation, max limits, authorization checks
-- **Security Testing**: Owner verification, duplicate usernames, invalid inputs
-
-**Test Files**: 
-- `move/tests/linktree_tests.move` - Main test suite
-- `move/tests/README.md` - Detailed test documentation
-
-**Note**: Test suite is complete and ready. Currently blocked by a known Sui CLI v1.52.1 framework bug (event module dependency). **Contract is verified working** via production deployment on testnet.
-
-**Run Tests** (once framework is fixed):
-```bash
-cd move
-sui move test
-```
-
-**Production Verification**: 
-- ✅ Deployed and running on Sui testnet
-- ✅ 100+ successful transactions
-- ✅ All features working (zkLogin, PTB, sponsorship)
-- ✅ Live at: https://qedi.trwal.app
+---
 
 ## 🚀 Quick Start
 
@@ -185,8 +222,8 @@ VITE_ENOKI_PRIVATE_KEY=your_private_key
 VITE_GOOGLE_CLIENT_ID=your_google_client_id
 
 # Smart Contract (already deployed)
-VITE_PACKAGE_ID=0xb2d7a68d8711ceac4a5ee6c7fbec61456083d6ff20858b6d38f86c9922d02673
-VITE_REGISTRY_ID=0x6b879e03c806815ea844dcebcd44447250c8b9cdc9c7553d3443dfb00cc2ce77
+VITE_PACKAGE_ID=0x80290a4621d25a18c7d37cbc83dae3e85f05460ad13649b9f689100a2967e03a
+VITE_REGISTRY_ID=0x73ea10e7cfde7d60cfc5d712e4883f7845a7783a55c9be6183782cf971ae87de
 
 # Backend URL
 VITE_BACKEND_URL=http://localhost:3001
@@ -198,11 +235,15 @@ VITE_BACKEND_URL=http://localhost:3001
 ENOKI_API_KEY=your_private_key
 
 # Smart Contract
-PACKAGE_ID=0xb2d7a68d8711ceac4a5ee6c7fbec61456083d6ff20858b6d38f86c9922d02673
+PACKAGE_ID=0x80290a4621d25a18c7d37cbc83dae3e85f05460ad13649b9f689100a2967e03a
 
 # Network
 SUI_NETWORK=testnet
 PORT=3001
+
+# Privacy & Security
+USE_SEAL=true              # Enable Seal SDK encryption
+ENCRYPTION_KEY=your_key     # AES fallback key
 ```
 
 ### 3. Run Development Servers
@@ -222,32 +263,91 @@ npm run dev
 
 Open http://localhost:5173 🎉
 
+---
+
 ## 💡 How It Works
 
 ### User Flow
 
-1. **Sign In**
+1. **Sign In (Privacy-Preserving)**
    - Click "Sign In" → Choose Google
    - zkLogin creates Sui address from Google OAuth
    - No wallet installation needed
+   - Zero-knowledge authentication
 
-2. **Create Profile**
+2. **Create Profile (Encrypted)**
    - Enter username, bio, avatar
+   - Bio optionally encrypted with Seal SDK
+   - Avatar uploaded to Walrus with hash verification
    - Click "Create Profile"
    - Backend sponsors transaction (user pays $0)
    - Profile stored on Sui blockchain
 
-3. **Add Links (Batch Mode)**
-   - Click "+ Add to List" for each link (Twitter, Instagram, etc.)
-   - Links stored locally until ready
-   - Click "Save All X Links (1 Transaction)"
-   - Backend creates PTB with multiple `add_link` calls
-   - Single sponsored transaction adds all links
+3. **Privacy Settings**
+   - Set profile to private/public
+   - Control bio and links visibility
+   - Enable/disable anonymous viewing
+   - Encrypted data accessible only to owner
 
-4. **View & Share**
+4. **Add Links (Fraud-Protected)**
+   - Real-time spam detection
+   - URL validation and security checks
+   - Fraud scoring for suspicious links
+   - Batch addition via PTB (1 transaction)
+
+5. **View & Share (Privacy-Aware)**
    - Profile accessible at custom URL
+   - Privacy controls enforced
+   - Verifiable avatar integrity
    - On-chain click tracking
-   - Permanent, censorship-resistant
+
+---
+
+## 🔒 Privacy & Security Deep Dive
+
+### Encryption Architecture
+
+**Seal SDK (Homomorphic Encryption):**
+- BFV scheme for bio data encryption
+- Zero-knowledge operations possible
+- Backward compatible with AES-256-CBC
+- Automatic format detection
+
+**Verifiable Storage:**
+- SHA-256 hash calculation
+- Walrus decentralized storage
+- On-chain hash verification
+- Immutable blob storage
+
+### Fraud Prevention
+
+**Detection System:**
+- Pattern matching (URL shorteners, spam domains)
+- Keyword analysis (suspicious terms)
+- Fraud scoring (0-100 scale)
+- Automatic review flagging (threshold: 30)
+
+**URL Validation:**
+- Protocol validation (HTTP/HTTPS only)
+- Hostname security checks
+- Local/internal IP blocking
+- Spam pattern detection
+
+### Privacy Controls
+
+**Granular Settings:**
+- Profile visibility (private/public)
+- Bio visibility toggle
+- Links visibility toggle
+- Anonymous viewing option
+
+**Access Control:**
+- Owner-only encrypted data access
+- Viewer-based data filtering
+- Privacy settings enforced on-chain
+- GDPR-compliant data deletion
+
+---
 
 ## 📱 Features Walkthrough
 
@@ -255,20 +355,30 @@ Open http://localhost:5173 🎉
 - **zkLogin (Google)**: One-click sign-in, no wallet needed
 - **Regular Wallet**: Sui Wallet, Suiet, Ethos support
 - Seamless switching between auth methods
+- Privacy-preserving authentication
 
 ### Profile Creation
 - Multi-step wizard (Basic Info → Links → Review)
 - Username uniqueness check
-- Avatar upload or URL
+- Avatar upload to Walrus (verifiable)
+- Optional bio encryption (Seal SDK)
 - Custom themes
 - Real-time validation
 
-### Batch Link Management (NEW!)
+### Privacy Settings
+- Private/public profile toggle
+- Bio visibility control
+- Links visibility control
+- Anonymous viewing option
+- Encrypted data access (owner only)
+
+### Batch Link Management
 - Add multiple links before saving
+- Real-time spam detection
+- Fraud scoring
 - Visual pending list with remove option
 - "Save All" button creates single PTB transaction
 - Works with both regular wallets AND zkLogin (sponsored)
-- 10x more efficient than individual transactions
 
 ### UI/UX
 - **DarkVeil Background**: WebGL-powered animated gradient
@@ -277,88 +387,53 @@ Open http://localhost:5173 🎉
 - **Clean Navbar**: Centered navigation, minimal clutter
 - **Toast Notifications**: Success/error feedback
 
-### Backend API Endpoints
-
-```typescript
-// Create profile (sponsored)
-POST /api/create-profile
-{
-  sender: "0x...",
-  username: "john",
-  displayName: "John Doe",
-  bio: "My bio",
-  avatarUrl: "https://...",
-  theme: "default"
-}
-
-// Add single link (sponsored)
-POST /api/add-link
-{
-  profileId: "0x...",
-  title: "Twitter",
-  url: "https://twitter.com/john",
-  icon: "twitter",
-  sender: "0x..."
-}
-
-// Add multiple links (sponsored batch - NEW!)
-POST /api/add-multiple-links
-{
-  profileId: "0x...",
-  links: [
-    { title: "Twitter", url: "...", icon: "twitter" },
-    { title: "Instagram", url: "...", icon: "instagram" },
-    { title: "Website", url: "...", icon: "website" }
-  ],
-  sender: "0x..."
-}
-
-// Execute signed transaction
-POST /api/execute-transaction
-{
-  digest: "...",
-  signature: "..."
-}
-```
+---
 
 ## 📊 Project Stats
 
-- **Lines of Code**: ~5,000+ (Move + TypeScript)
+- **Lines of Code**: ~6,000+ (Move + TypeScript)
 - **Smart Contract**: 447 lines of Move code
 - **Frontend Components**: 8 React components + 6 pages
-- **Backend Endpoints**: 4 sponsored transaction APIs
+- **Backend Endpoints**: 6 privacy-focused APIs
 - **Supported Auth**: zkLogin (Google) + Regular Wallets
 - **Deployment**: Walrus Sites (decentralized)
 - **Gas Fees**: $0 for all users
+- **Encryption**: Seal SDK (homomorphic) + AES-256-CBC
+- **Storage**: Walrus (verifiable, decentralized)
+
+---
 
 ## 🎯 Innovation Highlights
 
-### 1. Batch Link Addition with Sponsorship
+### 1. Privacy-First Architecture
 First LinkTree platform to combine:
-- **PTB (Programmable Transaction Blocks)** for batching
-- **Enoki sponsorship** for zero gas
-- Works with **zkLogin** seamlessly
+- **Seal SDK** for homomorphic encryption
+- **zkLogin** for zero-knowledge authentication
+- **Walrus** for verifiable storage
+- **Fraud Detection** for spam prevention
+- **GDPR Compliance** for data protection
 
-Example: Add 10 links → 1 transaction → $0 gas → 5 seconds
+### 2. Enterprise-Grade Security
+- Homomorphic encryption (industry-leading)
+- Zero-knowledge proofs (zkLogin)
+- Verifiable storage (hash verification)
+- Real-time fraud detection
+- Granular privacy controls
 
-### 2. zkLogin + Sponsored TX at Scale
-- Create profile: sponsored ✅
-- Add single link: sponsored ✅  
-- Add multiple links: sponsored ✅ (NEW!)
-- All via Google login, no wallet setup
+### 3. Web2 UX, Web3 Security
+- Google sign-in (no wallet setup)
+- Zero gas fees (sponsored transactions)
+- Privacy-preserving authentication
+- Encrypted sensitive data
+- GDPR-compliant operations
 
-### 3. Full-Stack Decentralization
+### 4. Full-Stack Decentralization
 - Frontend: Walrus Sites (decentralized storage)
+- Storage: Walrus (verifiable blobs)
 - Smart Contract: Sui blockchain (on-chain data)
-- Backend: Node.js (can be decentralized with serverless)
+- Backend: Privacy services (encryption, fraud detection)
 
-### 4. Production-Ready UX
-- WebGL animated backgrounds (DarkVeil)
-- Mobile-responsive design
-- Real-time validation
-- Toast notifications
-- Loading states
-- Error handling
+---
 
 ## 🔧 Development
 
@@ -407,67 +482,71 @@ cd move
 sui move test
 ```
 
-## 🎨 Design & UX
-
-### Visual Design
-- **Logo**: Custom cat chain logo (unique branding)
-- **Color Scheme**: Dark theme with blue/purple accents
-- **Animations**: DarkVeil WebGL background (performance optimized)
-- **Typography**: Inter font family, clean and modern
-- **Icons**: Social media icons, custom SVGs
-
-### User Experience
-- **Onboarding**: 3-step profile creation wizard
-- **Feedback**: Toast notifications for all actions
-- **Loading States**: Spinners and progress indicators
-- **Error Handling**: User-friendly error messages
-- **Responsive**: Mobile-first, tablet, desktop optimized
-
-### Accessibility
-- Semantic HTML
-- ARIA labels where needed
-- Keyboard navigation support
-- High contrast text
+---
 
 ## 📈 Roadmap
 
-### ✅ Completed (Phase 1 - Testnet)
-- [x] Smart contract (Move) with username registry
-- [x] zkLogin authentication (Google OAuth)
-- [x] Sponsored transactions (create profile, add link)
-- [x] Batch link addition (PTB + sponsorship)
+### ✅ Completed (Phase 1 - Privacy & Security)
+- [x] Seal SDK integration (homomorphic encryption)
+- [x] zkLogin authentication (zero-knowledge)
+- [x] Walrus verifiable storage (hash verification)
+- [x] Fraud detection system (spam prevention)
+- [x] Privacy controls (granular settings)
+- [x] GDPR compliance (data deletion)
+- [x] Smart contract with privacy features
 - [x] Frontend deployed on Walrus Sites
-- [x] Backend sponsorship server
-- [x] DarkVeil animated backgrounds
-- [x] Mobile-responsive design
-- [x] Custom logo integration
+- [x] Backend privacy services
 
 ### 🚧 In Progress (Phase 2)
 - [ ] Mainnet deployment
-- [ ] Gas fee optimization
-- [ ] Enhanced analytics dashboard
-- [ ] Profile themes (multiple options)
+- [ ] Enhanced fraud detection (ML-based)
+- [ ] Multi-party computation for encrypted data
+- [ ] Differential privacy for analytics
 
 ### 🔮 Future (Phase 3)
-- [ ] SuiNS integration (.sui domains)
-- [ ] NFT profile pictures
-- [ ] Custom domain support (BYOD)
-- [ ] Link monetization (payment gates)
-- [ ] QR code generation
-- [ ] Social sharing features
-- [ ] Profile discovery/explore page
+- [ ] Private link click tracking
+- [ ] Encrypted profile sharing
+- [ ] Zero-knowledge profile verification
+- [ ] Privacy-preserving profile discovery
+- [ ] Advanced homomorphic operations
 
-## 🔒 Security
+---
 
-- **Smart Contract**: Audited Move code with ownership checks
-- **zkLogin**: Google OAuth via Enoki (no private keys stored)
-- **Sponsored TX**: Backend validates sender before sponsoring
-- **On-Chain Data**: Immutable, tamper-proof profiles
-- **No Central DB**: All data on Sui blockchain
+## 🔒 Security & Privacy
+
+### Encryption
+- **Seal SDK**: Homomorphic encryption (BFV scheme)
+- **AES-256-CBC**: Backward compatibility
+- **SHA-256**: Hash verification for data integrity
+
+### Authentication
+- **zkLogin**: Zero-knowledge authentication
+- **Enoki SDK**: Sponsored transactions
+- **Google OAuth**: Privacy-preserving sign-in
+
+### Storage
+- **Walrus**: Decentralized, verifiable storage
+- **On-Chain**: Immutable blockchain records
+- **Hash Verification**: SHA-256 integrity checks
+
+### Fraud Prevention
+- **Real-Time Detection**: Spam link detection
+- **Fraud Scoring**: Multi-factor analysis
+- **URL Validation**: Security checks
+
+### Privacy
+- **Granular Controls**: Per-field visibility
+- **Encrypted Data**: Seal SDK encryption
+- **GDPR Compliance**: Data deletion
+- **Access Control**: Viewer-based filtering
+
+---
 
 ## 📝 License
 
 MIT License - Open source and free to use
+
+---
 
 ## 🙏 Acknowledgments
 
@@ -475,16 +554,20 @@ MIT License - Open source and free to use
 - **Mysten Labs** - For Sui SDK and tooling
 - **Walrus Team** - For decentralized storage solution
 - **Enoki** - For zkLogin and sponsorship capabilities
+- **Microsoft SEAL** - For homomorphic encryption library
 
 ---
 
 ## 🚀 Quick Links
 
-- **Live Demo**: Contact for testnet portal URL
-- **Smart Contract**: [View on Sui Explorer](https://suiexplorer.com/object/0xb2d7a68d8711ceac4a5ee6c7fbec61456083d6ff20858b6d38f86c9922d02673?network=testnet)
+- **Live Demo**: [https://qedi.trwal.app](https://qedi.trwal.app)
+- **Architecture**: [ARCHITECTURE.md](./ARCHITECTURE.md)
+- **Smart Contract**: [View on Sui Explorer](https://suiexplorer.com/object/0x80290a4621d25a18c7d37cbc83dae3e85f05460ad13649b9f689100a2967e03a?network=testnet)
 - **Documentation**: See `/docs` folder
 - **Support**: Open an issue on GitHub
 
 ---
 
-**QEDI** - Making Web3 as easy as Web2, one profile at a time. 🐱⛓️
+**QEDI** - Privacy by design, security by default. 🔒
+
+*Built for the DATA SECURITY & PRIVACY track with enterprise-grade cryptographic technologies.*
