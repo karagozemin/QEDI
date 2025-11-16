@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useCurrentAccount, useSignAndExecuteTransaction, useSignTransaction, useWallets } from '@mysten/dapp-kit';
 import { isEnokiWallet } from '@mysten/enoki';
+import { Transaction } from '@mysten/sui/transactions';
 import { createProfileTransaction, addLinkTransaction } from '../lib/sui-client';
-import { BACKEND_URL } from '../lib/constants';
+import { BACKEND_URL, PACKAGE_ID } from '../lib/constants';
 import DarkVeil from '../components/DarkVeil';
 import DashboardLayout from '../components/Layouts/DashboardLayout';
 import type { PrivacySettings } from '../types/profile';
@@ -35,6 +36,7 @@ export default function Create() {
   });
   const [isPrivate, setIsPrivate] = useState(false);
   const [useWalrusAvatar, setUseWalrusAvatar] = useState(false);
+  const [encryptBioWithSeal, setEncryptBioWithSeal] = useState(false);
 
   // Check if current wallet is an Enoki wallet (zkLogin)
   const connectedWallet = wallets.find(wallet => 
@@ -194,6 +196,36 @@ export default function Create() {
         }
       }
       
+      // Handle Seal SDK bio encryption if selected
+      let finalBio = formData.bio;
+      let encryptedBio = '';
+      if (encryptBioWithSeal && formData.bio) {
+        try {
+          console.log('Encrypting bio with Seal SDK...');
+          const encryptResponse = await fetch(`${BACKEND_URL}/api/encrypt-bio`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              bio: formData.bio,
+            }),
+          });
+          
+          if (encryptResponse.ok) {
+            const { encrypted } = await encryptResponse.json();
+            encryptedBio = encrypted;
+            finalBio = ''; // Clear plain bio when encrypted
+            console.log('Bio encrypted with Seal SDK successfully');
+          } else {
+            console.warn('Seal encryption failed, using plain bio');
+          }
+        } catch (error) {
+          console.error('Seal encryption error:', error);
+          // Continue with plain bio if encryption fails
+        }
+      }
+      
       // Get zkLogin info if Enoki wallet is connected
       let zkLoginProvider = '';
       let zkLoginSub = '';
@@ -206,7 +238,7 @@ export default function Create() {
       const profileTx = createProfileTransaction(
         formData.username,
         formData.displayName,
-        formData.bio,
+        finalBio, // Use finalBio (may be empty if encrypted)
         finalAvatarUrl,
         formData.theme,
         isPrivate,
@@ -234,13 +266,14 @@ export default function Create() {
               sender: currentAccount.address,
               username: formData.username,
               displayName: formData.displayName,
-              bio: formData.bio,
+              bio: finalBio, // Use finalBio (may be empty if encrypted)
               avatarUrl: finalAvatarUrl,
               theme: formData.theme,
               // Privacy fields (optional, backward compatible)
               isPrivate: isPrivate,
               privacySettings: privacySettings,
               walrusAvatarHash: walrusAvatarHash || undefined,
+              encryptedBio: encryptedBio || undefined, // Include encrypted bio if available
               // zkLogin fields
               zkLoginProvider: zkLoginProvider,
               zkLoginSub: zkLoginSub,
@@ -288,6 +321,81 @@ export default function Create() {
           const { result } = await executeResponse.json();
           console.log('✅ Sponsored transaction executed successfully:', result);
           
+          // If encrypted bio was created, set it on the profile
+          if (encryptedBio) {
+            try {
+              // Extract profile ID from transaction result
+              const resultWithChanges = result as any;
+              let profileId = null;
+              
+              if (resultWithChanges?.objectChanges) {
+                const createdObject = resultWithChanges.objectChanges.find((change: any) => 
+                  change.type === 'created' && 
+                  change.objectType && 
+                  change.objectType.includes('LinkTreeProfile')
+                );
+                if (createdObject) {
+                  profileId = createdObject.objectId;
+                }
+              }
+              
+              if (!profileId && resultWithChanges?.effects?.created) {
+                const profileObject = resultWithChanges.effects.created.find((obj: any) => 
+                  obj.reference?.objectId && 
+                  (!obj.objectType || obj.objectType.includes('LinkTreeProfile'))
+                );
+                if (profileObject) {
+                  profileId = profileObject.reference.objectId;
+                }
+              }
+              
+              if (profileId) {
+                console.log('Setting encrypted bio for profile:', profileId);
+                
+                // Create sponsored transaction for set_encrypted_bio
+                const setBioResponse = await fetch(`${BACKEND_URL}/api/set-encrypted-bio`, {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({
+                    profileId,
+                    encryptedBio,
+                    sender: currentAccount.address,
+                  }),
+                });
+                
+                if (setBioResponse.ok) {
+                  const { digest: bioDigest, bytes: bioBytes } = await setBioResponse.json();
+                  
+                  // Sign and execute
+                  const { signature: bioSignature } = await signTransaction({
+                    transaction: bioBytes
+                  });
+                  
+                  if (bioSignature) {
+                    await fetch(`${BACKEND_URL}/api/execute-transaction`, {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                      },
+                      body: JSON.stringify({
+                        digest: bioDigest,
+                        signature: bioSignature,
+                      }),
+                    });
+                    console.log('✅ Encrypted bio set successfully');
+                  }
+                }
+              } else {
+                console.warn('Could not find profile ID to set encrypted bio');
+              }
+            } catch (bioError) {
+              console.error('Failed to set encrypted bio:', bioError);
+              // Don't fail the whole process if this fails
+            }
+          }
+          
           // Show success toast
           setShowSuccessToast(true);
           setTimeout(() => setShowSuccessToast(false), 5000);
@@ -319,8 +427,71 @@ export default function Create() {
             transaction: profileTx,
           },
           {
-          onSuccess: async (result) => {
+            onSuccess: async (result) => {
             console.log('Profile created successfully:', result);
+            
+            // If encrypted bio was created, set it on the profile
+            if (encryptedBio) {
+              try {
+                // Extract profile ID from transaction result
+                const resultWithChanges = result as any;
+                let profileId = null;
+                
+                if (resultWithChanges?.objectChanges) {
+                  const createdObject = resultWithChanges.objectChanges.find((change: any) => 
+                    change.type === 'created' && 
+                    change.objectType && 
+                    change.objectType.includes('LinkTreeProfile')
+                  );
+                  if (createdObject) {
+                    profileId = createdObject.objectId;
+                  }
+                }
+                
+                if (!profileId && resultWithChanges?.effects?.created) {
+                  const profileObject = resultWithChanges.effects.created.find((obj: any) => 
+                    obj.reference?.objectId && 
+                    (!obj.objectType || obj.objectType.includes('LinkTreeProfile'))
+                  );
+                  if (profileObject) {
+                    profileId = profileObject.reference.objectId;
+                  }
+                }
+                
+                if (profileId) {
+                  console.log('Setting encrypted bio for profile:', profileId);
+                  
+                  // Create transaction for set_encrypted_bio
+                  const setBioTx = new Transaction();
+                  setBioTx.moveCall({
+                    target: `${PACKAGE_ID}::linktree::set_encrypted_bio`,
+                    arguments: [
+                      setBioTx.object(profileId),
+                      setBioTx.pure.string(encryptedBio),
+                      setBioTx.object('0x6'),
+                    ],
+                  });
+                  
+                  // Execute transaction
+                  signAndExecuteTransaction(
+                    { transaction: setBioTx },
+                    {
+                      onSuccess: () => {
+                        console.log('✅ Encrypted bio set successfully');
+                      },
+                      onError: (error) => {
+                        console.error('Failed to set encrypted bio:', error);
+                      },
+                    }
+                  );
+                } else {
+                  console.warn('Could not find profile ID to set encrypted bio');
+                }
+              } catch (bioError) {
+                console.error('Failed to set encrypted bio:', bioError);
+                // Don't fail the whole process if this fails
+              }
+            }
             
             // Step 2: Add links if any exist (DISABLED - use Edit Profile instead)
             if (false && formData.links.length > 0) {
@@ -809,6 +980,26 @@ export default function Create() {
                         />
                         <span className="ml-3 text-white">Upload Avatar to Walrus (Verifiable Storage)</span>
                         <span className="ml-2 text-gray-400 text-sm">(Recommended for security)</span>
+                      </label>
+                    </div>
+                  )}
+
+                  {/* Seal SDK Bio Encryption Option */}
+                  {formData.bio && (
+                    <div className="mt-4 pt-4 border-t border-white/10">
+                      <label className="flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={encryptBioWithSeal}
+                          onChange={(e) => setEncryptBioWithSeal(e.target.checked)}
+                          className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        />
+                        <div className="ml-3 flex-1">
+                          <span className="text-white font-medium">Encrypt Bio with Seal SDK</span>
+                          <p className="text-gray-400 text-sm mt-1">
+                            Use homomorphic encryption (BFV scheme) for maximum privacy. Only you can decrypt your bio.
+                          </p>
+                        </div>
                       </label>
                     </div>
                   )}

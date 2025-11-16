@@ -633,6 +633,59 @@ app.post('/api/update-privacy', async (req, res) => {
   }
 });
 
+// Set Encrypted Bio (Seal SDK)
+app.post('/api/set-encrypted-bio', async (req, res) => {
+  try {
+    const { profileId, encryptedBio, sender } = req.body;
+
+    if (!profileId || !encryptedBio || !sender) {
+      return res.status(400).json({ 
+        error: 'Missing required fields: profileId, encryptedBio, sender' 
+      });
+    }
+
+    console.log('Setting encrypted bio for profile:', profileId);
+
+    // Create transaction to set encrypted bio
+    const tx = new Transaction();
+    tx.moveCall({
+      target: `${process.env.PACKAGE_ID}::linktree::set_encrypted_bio`,
+      arguments: [
+        tx.object(profileId),
+        tx.pure.string(encryptedBio),
+        tx.object('0x6'), // Clock object
+      ],
+    });
+
+    tx.setSender(sender);
+
+    const txBytes = await tx.build({
+      client: suiClient,
+      onlyTransactionKind: true,
+    });
+
+    const sponsored = await enokiClient.createSponsoredTransaction({
+      transactionKindBytes: toBase64(txBytes),
+      network: (process.env.SUI_NETWORK as any) || 'testnet',
+      sender: sender,
+      allowedMoveCallTargets: [`${process.env.PACKAGE_ID}::linktree::set_encrypted_bio`],
+      allowedAddresses: [sender]
+    });
+
+    res.json({
+      digest: sponsored.digest,
+      bytes: sponsored.bytes
+    });
+
+  } catch (error) {
+    console.error('Set encrypted bio failed:', error);
+    res.status(500).json({
+      error: 'Failed to set encrypted bio',
+      details: error instanceof Error ? error.message : String(error)
+    });
+  }
+});
+
 // Delete Profile Data (GDPR Compliance)
 app.delete('/api/delete-profile-data', async (req, res) => {
   try {

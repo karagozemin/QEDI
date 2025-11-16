@@ -1,14 +1,19 @@
 import { useState, useEffect } from 'react';
-import { useCurrentAccount } from '@mysten/dapp-kit';
+import { useCurrentAccount, useSignTransaction } from '@mysten/dapp-kit';
 import { getUserProfiles } from '../lib/sui-client';
+import { BACKEND_URL } from '../lib/constants';
 import SocialIcon from '../components/SocialIcon';
 import DarkVeil from '../components/DarkVeil';
 import DashboardLayout from '../components/Layouts/DashboardLayout';
 
 export default function MyProfiles() {
   const currentAccount = useCurrentAccount();
+  const { mutateAsync: signTransaction } = useSignTransaction();
   const [profiles, setProfiles] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [deletingProfileId, setDeletingProfileId] = useState<string | null>(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [selectedProfileForDelete, setSelectedProfileForDelete] = useState<any>(null);
 
   useEffect(() => {
     if (currentAccount?.address) {
@@ -85,6 +90,76 @@ export default function MyProfiles() {
     }
     console.log('Opening URL:', formattedUrl);
     window.open(formattedUrl, '_blank', 'noopener,noreferrer');
+  };
+
+  const handleDeleteProfile = async () => {
+    if (!selectedProfileForDelete || !currentAccount) {
+      return;
+    }
+
+    setDeletingProfileId(selectedProfileForDelete.data?.objectId);
+    
+    try {
+      // Step 1: Create sponsored transaction
+      const createResponse = await fetch(`${BACKEND_URL}/api/delete-profile-data`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          profileId: selectedProfileForDelete.data?.objectId,
+          sender: currentAccount.address,
+        }),
+      });
+
+      if (!createResponse.ok) {
+        const errorData = await createResponse.json();
+        throw new Error(`Backend error: ${errorData.error}`);
+      }
+
+      const { digest, bytes } = await createResponse.json();
+
+      // Step 2: Sign transaction
+      const { signature } = await signTransaction({
+        transaction: bytes
+      });
+
+      if (!signature) {
+        throw new Error('Failed to get signature');
+      }
+
+      // Step 3: Execute transaction
+      const executeResponse = await fetch(`${BACKEND_URL}/api/execute-transaction`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          digest,
+          signature,
+        }),
+      });
+
+      if (!executeResponse.ok) {
+        const errorData = await executeResponse.json();
+        throw new Error(`Execution error: ${errorData.error}`);
+      }
+
+      alert('Profile data has been marked for deletion. Note: On-chain data cannot be fully deleted, but sensitive information has been cleared.');
+      setShowDeleteModal(false);
+      setSelectedProfileForDelete(null);
+      loadProfiles(); // Reload profiles
+    } catch (error) {
+      console.error('Delete profile failed:', error);
+      alert(`Failed to delete profile: ${error instanceof Error ? error.message : String(error)}`);
+    } finally {
+      setDeletingProfileId(null);
+    }
+  };
+
+  const openDeleteModal = (profile: any) => {
+    setSelectedProfileForDelete(profile);
+    setShowDeleteModal(true);
   };
 
   if (!currentAccount) {
@@ -239,6 +314,12 @@ export default function MyProfiles() {
                         >
                           Edit
                         </a>
+                        <button
+                          onClick={() => openDeleteModal(profile)}
+                          className="px-6 py-3 bg-red-600 text-white font-semibold rounded-xl hover:bg-red-700 transition-colors duration-300"
+                        >
+                          Delete
+                        </button>
                       </div>
                     </div>
 
@@ -372,6 +453,65 @@ export default function MyProfiles() {
           </div>
         </div>
       </div>
+
+      {/* GDPR Delete Modal */}
+      {showDeleteModal && selectedProfileForDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-3xl shadow-2xl border border-gray-600/30 p-8 max-w-md w-full mx-4">
+            <div className="flex items-center gap-4 mb-6">
+              <div className="w-12 h-12 bg-red-500/20 rounded-xl flex items-center justify-center">
+                <svg className="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+              <h3 className="text-2xl font-bold text-white">Delete Profile Data</h3>
+            </div>
+            
+            <div className="mb-6">
+              <p className="text-gray-300 mb-4">
+                Are you sure you want to delete your profile data? This action will:
+              </p>
+              <ul className="list-disc list-inside text-gray-400 space-y-2 mb-4">
+                <li>Clear all sensitive information (bio, links, etc.)</li>
+                <li>Set profile to maximum privacy settings</li>
+                <li>Mark profile as deleted</li>
+              </ul>
+              <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4">
+                <p className="text-yellow-200 text-sm">
+                  <strong>Note:</strong> On-chain data cannot be fully deleted due to blockchain immutability. 
+                  However, all sensitive information will be cleared and the profile will be hidden.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex gap-4">
+              <button
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setSelectedProfileForDelete(null);
+                }}
+                className="flex-1 px-6 py-3 bg-gray-600 text-white font-semibold rounded-xl hover:bg-gray-700 transition-colors duration-300"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteProfile}
+                disabled={deletingProfileId !== null}
+                className="flex-1 px-6 py-3 bg-red-600 text-white font-semibold rounded-xl hover:bg-red-700 transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {deletingProfileId ? (
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    Deleting...
+                  </div>
+                ) : (
+                  'Delete Profile'
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
     </DashboardLayout>
   );
