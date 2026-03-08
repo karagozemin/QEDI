@@ -131,7 +131,7 @@ QEDI/
 
 ### Frontend - Walrus Sites
 - **Status**: ✅ Live on Walrus testnet
-- **URL**: `https://qedi.trwal.app`
+- **URL**: `https://qedi-sui.vercel.app`
 - **Hosting**: Decentralized, censorship-resistant
 - **Performance**: Global CDN via Walrus network
 - **Privacy**: No server-side tracking, client-side only
@@ -261,7 +261,7 @@ cd frontend
 npm run dev
 ```
 
-Open https://qedi.trwal.app 🎉
+Open https://qedi-sui.vercel.app 🎉
 
 ---
 
@@ -560,7 +560,7 @@ MIT License - Open source and free to use
 
 ## 🚀 Quick Links
 
-- **Live Demo**: [https://qedi.trwal.app](https://qedi.trwal.app)
+- **Live Demo**: [https://qedi-sui.vercel.app](https://qedi-sui.vercel.app)
 - **Architecture**: [ARCHITECTURE.md](./ARCHITECTURE.md)
 - **Smart Contract**: [View on Sui Explorer](https://suiexplorer.com/object/0x80290a4621d25a18c7d37cbc83dae3e85f05460ad13649b9f689100a2967e03a?network=testnet)
 - **Documentation**: See `/docs` folder
